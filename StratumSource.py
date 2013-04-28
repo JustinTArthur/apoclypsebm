@@ -17,6 +17,7 @@ import socks
 
 
 BASE_DIFFICULTY = 0x00000000FFFF0000000000000000000000000000000000000000000000000000
+MIN_DIFFICULTY  = 0x00000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
 
 def detect_stratum_proxy(host):
 	s = None
@@ -192,7 +193,7 @@ class StratumSource(Source):
 			#mining.set_difficulty
 			elif message['method'] == 'mining.set_difficulty':
 				say_line("Setting new difficulty: %s", message['params'][0])
-				self.server_difficulty = BASE_DIFFICULTY / message['params'][0]
+				self.server_difficulty = min(MIN_DIFFICULTY, BASE_DIFFICULTY / message['params'][0])
 
 			#client.reconnect
 			elif message['method'] == 'client.reconnect':

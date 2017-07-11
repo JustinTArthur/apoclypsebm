@@ -15,7 +15,7 @@ def say(format_, args=(), say_quiet=False):
 	with lock:
 		p = format_ % args
 		if verbose:
-			print '%s %s,' % (server, datetime.now().strftime(TIME_FORMAT)), p
+			print('%s %s,' % (server, datetime.now().strftime(TIME_FORMAT), p))
 		else:
 			sys.stdout.write('\r%s\r%s %s' % (' '*80, server, p))
 		sys.stdout.flush()

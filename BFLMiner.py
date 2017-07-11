@@ -47,9 +47,9 @@ def initialize(options):
 	ports = find_udev(check, 'BitFORCE*SHA256') or find_serial_by_id(check, 'BitFORCE_SHA256') or find_com_ports(check)
 
 	if not options.device and ports:
-		print '\nBFL devices on ports:\n'
+		print('\nBFL devices on ports:\n')
 		for i in xrange(len(ports)):
-			print '[%d]\t%s' % (i, ports[i])
+			print('[%d]\t%s' % (i, ports[i]))
 
 	miners = [
 		BFLMiner(i, ports[i], options)

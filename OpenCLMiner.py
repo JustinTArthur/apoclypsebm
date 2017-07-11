@@ -21,7 +21,7 @@ try:
 	import pyopencl as cl
 	PYOPENCL = True
 except ImportError:
-	print '\nNo PyOpenCL\n'
+	print('\nNo PyOpenCL\n')
 
 if PYOPENCL:
 	try:
@@ -29,9 +29,9 @@ if PYOPENCL:
 		if len(platforms):
 			OPENCL = True
 		else:
-			print '\nNo OpenCL platforms\n'
+			print('\nNo OpenCL platforms\n')
 	except Exception:
-		print '\nNo OpenCL\n'
+		print('\nNo OpenCL\n')
 
 def vectors_definition():
 	if MACOSX:
@@ -58,17 +58,17 @@ if OPENCL:
 		from ctypes import sizeof, byref, c_int, cast
 		from collections import namedtuple
 		if ADL_Main_Control_Create(ADL_Main_Memory_Alloc, 1) != ADL_OK:
-			print "\nCouldn't initialize ADL interface.\n"
+			print("\nCouldn't initialize ADL interface.\n")
 		else:
 			ADL = True
 			adl_lock = Lock()
 	except ImportError:
 		if has_amd():
-			print '\nWARNING: no adl3 module found (github.com/mjmvisser/adl3), temperature control is disabled\n'
+			print('\nWARNING: no adl3 module found (github.com/mjmvisser/adl3), temperature control is disabled\n')
 	except OSError:# if no ADL is present i.e. no AMD platform
-		print '\nWARNING: ADL missing (no AMD platform?), temperature control is disabled\n'
+		print('\nWARNING: ADL missing (no AMD platform?), temperature control is disabled\n')
 else:
-	print "\nNot using OpenCL\n"
+	print("\nNot using OpenCL\n")
 
 def shutdown():
 	if ADL:
@@ -88,9 +88,9 @@ def initialize(options):
 	platforms = cl.get_platforms()
 
 	if options.platform >= len(platforms) or (options.platform == -1 and len(platforms) > 1):
-		print 'Wrong platform or more than one OpenCL platforms found, use --platform to select one of the following\n'
+		print('Wrong platform or more than one OpenCL platforms found, use --platform to select one of the following\n')
 		for i in xrange(len(platforms)):
-			print '[%d]\t%s' % (i, platforms[i].name)
+			print('[%d]\t%s' % (i, platforms[i].name))
 		sys.exit()
 
 	if options.platform == -1:
@@ -99,10 +99,10 @@ def initialize(options):
 	devices = platforms[options.platform].get_devices()
 
 	if not options.device and devices:
-		print '\nOpenCL devices:\n'
+		print('\nOpenCL devices:\n')
 		for i in xrange(len(devices)):
-			print '[%d]\t%s' % (i, devices[i].name)
-		print '\nNo devices specified, using all GPU devices\n'
+			print('[%d]\t%s' % (i, devices[i].name))
+		print('\nNo devices specified, using all GPU devices\n')
 
 	miners = [
 		OpenCLMiner(i, options)

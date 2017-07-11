@@ -34,17 +34,22 @@ def sharound(a, b, c, d, e, f, g, h, x, k):
 
 def partial(state, merkle_end, time, difficulty, f):
     state2 = list(state)
-    data = [merkle_end, time, difficulty]
-    for i in xrange(3):
+
+    data0 = merkle_end
+    data1 = time
+    data2 = difficulty
+    data = (data0, data1, data2)
+
+    for i in range(3):
         (state2[~(i - 4) & 7], state2[~(i - 8) & 7]) = sharound(state2[(~(i - 1) & 7)], state2[~(i - 2) & 7],
                                                                 state2[~(i - 3) & 7], state2[~(i - 4) & 7],
                                                                 state2[~(i - 5) & 7], state2[~(i - 6) & 7],
                                                                 state2[~(i - 7) & 7], state2[~(i - 8) & 7], data[i],
                                                                 K[i])
 
-    f[0] = uint32(data[0] + (rotr(data[1], 7) ^ rotr(data[1], 18) ^ (data[1] >> 3)))
-    f[1] = uint32(data[1] + (rotr(data[2], 7) ^ rotr(data[2], 18) ^ (data[2] >> 3)) + 0x01100000)
-    f[2] = uint32(data[2] + (rotr(f[0], 17) ^ rotr(f[0], 19) ^ (f[0] >> 10)))
+    f[0] = uint32(data0 + (rotr(data1, 7) ^ rotr(data1, 18) ^ (data1 >> 3)))
+    f[1] = uint32(data1 + (rotr(data2, 7) ^ rotr(data2, 18) ^ (data2 >> 3)) + 0x01100000)
+    f[2] = uint32(data2 + (rotr(f[0], 17) ^ rotr(f[0], 19) ^ (f[0] >> 10)))
     f[3] = uint32(0x11002000 + (rotr(f[1], 17) ^ rotr(f[1], 19) ^ (f[1] >> 10)))
     f[4] = uint32(0x00000280 + (rotr(f[0], 7) ^ rotr(f[0], 18) ^ (f[0] >> 3)))
     f[5] = uint32(f[0] + (rotr(f[1], 7) ^ rotr(f[1], 18) ^ (f[1] >> 3)))
@@ -56,16 +61,17 @@ def partial(state, merkle_end, time, difficulty, f):
 
 
 def calculateF(state, merkle_end, time, difficulty, f, state2):
-    data = (merkle_end, time, difficulty)
+    data0 = merkle_end
+    data1 = time
+    data2 = difficulty
+
     # W2
-    f[0] = uint32(data[2])
+    f[0] = uint32(data2)
 
     # W16
-    f[1] = uint32(data[0] + (rotr(data[1], 7) ^ rotr(data[1], 18) ^
-                             (data[1] >> 3)))
+    f[1] = uint32(data0 + (rotr(data1, 7) ^ rotr(data1, 18) ^ (data1 >> 3)))
     # W17
-    f[2] = uint32(data[1] + (rotr(data[2], 7) ^ rotr(data[2], 18) ^
-                             (data[2] >> 3)) + 0x01100000)
+    f[2] = uint32(data1 + (rotr(data2, 7) ^ rotr(data2, 18) ^ (data2 >> 3)) + 0x01100000)
 
     # 2 parts of the first SHA round
     f[3] = uint32(state[4] + (rotr(state2[1], 6) ^
@@ -80,7 +86,7 @@ def calculateF(state, merkle_end, time, difficulty, f, state2):
 
 def sha256(state, data):
     digest = list(state)
-    for i in xrange(64):
+    for i in range(64):
         if i > 15:
             data[i] = R(data[i - 2], data[i - 7], data[i - 15], data[i - 16])
         (digest[~(i - 4) & 7], digest[~(i - 8) & 7]) = sharound(digest[(~(i - 1) & 7)], digest[~(i - 2) & 7],

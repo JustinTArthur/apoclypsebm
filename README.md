@@ -1,8 +1,30 @@
-Usage: poclbm.py [OPTION]... SERVER[#tag]...
-SERVER is one or more [http[s]|stratum://]user:pass@host:port          (required)
-[#tag] is a per SERVER user friendly name displayed in stats (optional)
+# apoclypsebm - The ApoCLypse Bitcoin Miner
+## Background
+This hobby project undertakes the quixotic task of maintaining a fast modern Bitcoin miner for programmable compute
+devices like GPUs. It was forked from the PyOpenCL Bitcoin Miner (poclbm), a project authored by 
+[m0mchil](https://github.com/m0mchil/) and contributors.
 
-Options:
+It features an OpenCL Kernel that has incorporated ideas or code from:
+* [diapolo](https://github.com/diapolo/)
+* [m0mchil](https://github.com/m0mchil/)
+* [phataeus](https://sourceforge.net/u/phateus/)
+* [rethaw](https://bitcointalk.org/index.php?action=profile;u=18618)
+If your work is represented herein and I didn't give you credit, please let me know. At the moment, I reserve no rights
+to the mining driver or the OpenCL kernel. They were derived from public domain works.
+
+## Economy
+At the time of this writing, on-chip implementations of the Bitcoin mining solution algorithm will outperform this
+software in time and joules expended. Under most economic conditions, mining blocks on a Bitcoin chain where
+on-chip implementations are competing would be at tremendous waste of expended resources.
+
+## Usage
+    apoclypse [OPTION]... SERVER[#tag]...
+
+`SERVER` is one or more [http[s]|stratum://]user:pass@host:port          (required)
+[#tag] is an optional per server user friendly name displayed in stats (optional)
+
+### Options
+```
   --version             show program's version number and exit
   -h, --help            show this help message and exit
   --verbose             verbose output, suitable for redirection to log file
@@ -38,7 +60,7 @@ Options:
 
   Kernel Options:
     -p PLATFORM, --platform=PLATFORM
-                        use platform by id
+                        use OpenCL platform by id
     -d DEVICE, --device=DEVICE
                         use device by id, by default asks for device
     -w WORKSIZE, --worksize=WORKSIZE
@@ -49,4 +71,5 @@ Options:
                         lag
     -s FRAMESLEEP, --sleep=FRAMESLEEP
                         sleep per frame in seconds, default 0
-    -v, --vectors       use vectors
+    -v, --vectors       use 2-attempts-wide vectors on all devices
+```

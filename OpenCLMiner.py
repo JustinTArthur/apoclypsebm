@@ -411,8 +411,8 @@ class OpenCLMiner(Miner):
 							else:
 								data2 = data2[offset : offset + size]
 								patched = ''
-								for i in xrange(len(data2) / 8):
-									instruction, = unpack('Q', data2[i * 8 : i * 8 + 8])
+								for j in xrange(len(data2) / 8):
+									instruction, = unpack('Q', data2[j * 8 : j * 8 + 8])
 									if (instruction&0x9003f00002001000) == 0x0001a00000000000:
 										instruction ^= (0x0001a00000000000 ^ 0x0000c00000000000)
 									patched += pack('Q', instruction)

@@ -7,8 +7,7 @@ from sha256 import partial, calculateF
 from struct import pack, unpack, error
 from threading import Lock
 from time import sleep, time
-from util import uint32, Object, bytereverse, tokenize, \
-	bytearray_to_uint32
+from util import uint32, Object, bytereverse, tokenize, bytearray_to_uint32, uint32_as_bytes
 import sys
 
 
@@ -114,12 +113,13 @@ def initialize(options):
 	]
 
 	for i in xrange(len(miners)):
-		miners[i].worksize = options.worksize[min(i, len(options.worksize) - 1)]
-		miners[i].frames = options.frames[min(i, len(options.frames) - 1)]
-		miners[i].frameSleep = options.frameSleep[min(i, len(options.frameSleep) - 1)]
-		miners[i].vectors = options.vectors[min(i, len(options.vectors) - 1)]
-		miners[i].cutoff_temp = options.cutoff_temp[min(i, len(options.cutoff_temp) - 1)]
-		miners[i].cutoff_interval = options.cutoff_interval[min(i, len(options.cutoff_interval) - 1)]
+		miner = miners[i]
+		miner.worksize = options.worksize[min(i, len(options.worksize) - 1)]
+		miner.frames = options.frames[min(i, len(options.frames) - 1)]
+		miner.frameSleep = options.frameSleep[min(i, len(options.frameSleep) - 1)]
+		miner.vectors = options.vectors[min(i, len(options.vectors) - 1)]
+		miner.cutoff_temp = options.cutoff_temp[min(i, len(options.cutoff_temp) - 1)]
+		miner.cutoff_interval = options.cutoff_interval[min(i, len(options.cutoff_interval) - 1)]
 	return miners
 
 
@@ -191,30 +191,31 @@ class OpenCLMiner(Miner):
 					state2 = partial(state, work.merkle_end, work.time, work.difficulty, f)
 					calculateF(state, work.merkle_end, work.time, work.difficulty, f, state2)
 
-					self.kernel.set_arg(0, pack('<I', state[0]))
-					self.kernel.set_arg(1, pack('<I', state[1]))
-					self.kernel.set_arg(2, pack('<I', state[2]))
-					self.kernel.set_arg(3, pack('<I', state[3]))
-					self.kernel.set_arg(4, pack('<I', state[4]))
-					self.kernel.set_arg(5, pack('<I', state[5]))
-					self.kernel.set_arg(6, pack('<I', state[6]))
-					self.kernel.set_arg(7, pack('<I', state[7]))
+					set_arg = self.kernel.set_arg
+					set_arg(0, uint32_as_bytes(state[0]))
+					set_arg(1, uint32_as_bytes(state[1]))
+					set_arg(2, uint32_as_bytes(state[2]))
+					set_arg(3, uint32_as_bytes(state[3]))
+					set_arg(4, uint32_as_bytes(state[4]))
+					set_arg(5, uint32_as_bytes(state[5]))
+					set_arg(6, uint32_as_bytes(state[6]))
+					set_arg(7, uint32_as_bytes(state[7]))
 
-					self.kernel.set_arg(8, pack('<I', state2[1]))
-					self.kernel.set_arg(9, pack('<I', state2[2]))
-					self.kernel.set_arg(10, pack('<I', state2[3]))
-					self.kernel.set_arg(11, pack('<I', state2[5]))
-					self.kernel.set_arg(12, pack('<I', state2[6]))
-					self.kernel.set_arg(13, pack('<I', state2[7]))
+					set_arg(8, uint32_as_bytes(state2[1]))
+					set_arg(9, uint32_as_bytes(state2[2]))
+					set_arg(10, uint32_as_bytes(state2[3]))
+					set_arg(11, uint32_as_bytes(state2[5]))
+					set_arg(12, uint32_as_bytes(state2[6]))
+					set_arg(13, uint32_as_bytes(state2[7]))
 
-					self.kernel.set_arg(15, pack('<I', f[0]))
-					self.kernel.set_arg(16, pack('<I', f[1]))
-					self.kernel.set_arg(17, pack('<I', f[2]))
-					self.kernel.set_arg(18, pack('<I', f[3]))
-					self.kernel.set_arg(19, pack('<I', f[4]))
+					set_arg(15, uint32_as_bytes(f[0]))
+					set_arg(16, uint32_as_bytes(f[1]))
+					set_arg(17, uint32_as_bytes(f[2]))
+					set_arg(18, uint32_as_bytes(f[3]))
+					set_arg(19, uint32_as_bytes(f[4]))
 
 			if temperature < self.cutoff_temp:
-				self.kernel.set_arg(14, pack('<I', base))
+				self.kernel.set_arg(14, uint32_as_bytes(base))
 				cl.enqueue_nd_range_kernel(queue, self.kernel, (global_threads,), (self.worksize,))
 
 				nonces_left -= global_threads
@@ -280,17 +281,18 @@ class OpenCLMiner(Miner):
 				work.time = bytereverse(bytereverse(work.time) + 1)
 				state2 = partial(state, work.merkle_end, work.time, work.difficulty, f)
 				calculateF(state, work.merkle_end, work.time, work.difficulty, f, state2)
-				self.kernel.set_arg(8, pack('<I', state2[1]))
-				self.kernel.set_arg(9, pack('<I', state2[2]))
-				self.kernel.set_arg(10, pack('<I', state2[3]))
-				self.kernel.set_arg(11, pack('<I', state2[5]))
-				self.kernel.set_arg(12, pack('<I', state2[6]))
-				self.kernel.set_arg(13, pack('<I', state2[7]))
-				self.kernel.set_arg(15, pack('<I', f[0]))
-				self.kernel.set_arg(16, pack('<I', f[1]))
-				self.kernel.set_arg(17, pack('<I', f[2]))
-				self.kernel.set_arg(18, pack('<I', f[3]))
-				self.kernel.set_arg(19, pack('<I', f[4]))
+				set_arg = self.kernel.set_arg
+				set_arg(8, uint32_as_bytes(state2[1]))
+				set_arg(9, uint32_as_bytes(state2[2]))
+				set_arg(10, uint32_as_bytes(state2[3]))
+				set_arg(11, uint32_as_bytes(state2[5]))
+				set_arg(12, uint32_as_bytes(state2[6]))
+				set_arg(13, uint32_as_bytes(state2[7]))
+				set_arg(15, uint32_as_bytes(f[0]))
+				set_arg(16, uint32_as_bytes(f[1]))
+				set_arg(17, uint32_as_bytes(f[2]))
+				set_arg(18, uint32_as_bytes(f[3]))
+				set_arg(19, uint32_as_bytes(f[4]))
 				last_n_time = now
 				self.update_time_counter += 1
 				if self.update_time_counter >= self.switch.max_update_time:
@@ -301,7 +303,7 @@ class OpenCLMiner(Miner):
 		self.context = cl.Context([self.device], None, None)
 		if (self.device.extensions.find('cl_amd_media_ops') != -1):
 			self.defines += ' -DBITALIGN'
-			if self.device_name in ['Cedar',
+			if self.device_name in ('Cedar',
 									'Redwood',
 									'Juniper',
 									'Cypress',
@@ -314,7 +316,7 @@ class OpenCLMiner(Miner):
 									'Wrestler',
 									'Zacate',
 									'WinterPark',
-									'BeaverCreek']:
+									'BeaverCreek'):
 				self.defines += ' -DBFI_INT'
 
 		kernel_file = open('phatk.cl', 'r')
@@ -383,7 +385,7 @@ class OpenCLMiner(Miner):
 					found = True
 					break
 
-			if (found == False):
+			if found is False:
 				devices.append(deviceAdapter(index, adapterID, busNum, udid))
 
 		for device in devices:

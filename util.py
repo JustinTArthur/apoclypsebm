@@ -1,4 +1,5 @@
 from log import say_exception
+from struct import Struct
 import sys
 
 class Object(object):
@@ -6,6 +7,8 @@ class Object(object):
 
 def uint32(x):
 	return x & 0xffffffffL
+
+uint32_as_bytes = Struct('<I').pack
 
 def bytereverse(x):
 	return uint32(( ((x) << 24) | (((x) << 8) & 0x00ff0000) | (((x) >> 8) & 0x0000ff00) | ((x) >> 24) ))

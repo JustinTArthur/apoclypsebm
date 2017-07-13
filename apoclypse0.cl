@@ -46,11 +46,11 @@ __constant ulong L = 0x198c7e2a2;
 #define Ma(x, y, z) Ch((z ^ x), y, x)
 
 // Various intermediate calculations for each SHA round
-#define s0(n) (rot(Vals[(128 - n) % 8], 30) ^ rot(Vals[(128 - n) % 8], 19) ^ rot(Vals[(128 - n) % 8], 10))
-#define s1(n) (rot(Vals[(132 - n) % 8], 26) ^ rot(Vals[(132 - n) % 8], 21) ^ rot(Vals[(132 - n) % 8], 7))
-#define ch(n) (Ch(Vals[(132 - n) % 8], Vals[(133 - n) % 8], Vals[(134 - n) % 8]))
-#define ma(n) (Ma(Vals[(129 - n) % 8], Vals[(130 - n) % 8], Vals[(128 - n) % 8]))
-#define t1(n) (K[n % 64] + Vals[(135 - n) % 8] + W[n] + s1(n) + ch(n))
+#define s0(n) (rot(Vals[(128 - n) & 7], 30) ^ rot(Vals[(128 - n) & 7], 19) ^ rot(Vals[(128 - n) & 7], 10))
+#define s1(n) (rot(Vals[(132 - n) & 7], 26) ^ rot(Vals[(132 - n) & 7], 21) ^ rot(Vals[(132 - n) & 7], 7))
+#define ch(n) (Ch(Vals[(132 - n) & 7], Vals[(133 - n) & 7], Vals[(134 - n) & 7]))
+#define ma(n) (Ma(Vals[(129 - n) & 7], Vals[(130 - n) & 7], Vals[(128 - n) & 7]))
+#define t1(n) (K[n & 63] + Vals[(135 - n) & 7] + W[n] + s1(n) + ch(n))
 
 // intermediate W calculations
 #define P1(x) (rot(W[x - 2], 15) ^ rot(W[x - 2], 13) ^ (W[x - 2] >> 10U))
@@ -62,7 +62,7 @@ __constant ulong L = 0x198c7e2a2;
 #define W(x) (W[x] = P4(x) + P3(x) + P2(x) + P1(x))
 
 // SHA round without W calc
-#define sharound(n) { Vals[(131 - n) % 8] += t1(n); Vals[(135 - n) % 8] = t1(n) + s0(n) + ma(n); }
+#define sharound(n) { Vals[(131 - n) & 7] += t1(n); Vals[(135 - n) & 7] = t1(n) + s0(n) + ma(n); }
 
 __kernel void search(	const uint state0, const uint state1, const uint state2, const uint state3,
 						const uint state4, const uint state5, const uint state6, const uint state7,

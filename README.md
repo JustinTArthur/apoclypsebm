@@ -7,8 +7,10 @@ devices like GPUs. It was forked from the PyOpenCL Bitcoin Miner (poclbm), a pro
 It features an OpenCL Kernel that has incorporated ideas or code from:
 * [diapolo](https://github.com/diapolo/)
 * [m0mchil](https://github.com/m0mchil/)
+* [neurobox](https://bitcointalk.org/index.php?action=profile;u=106397)
 * [phataeus](https://sourceforge.net/u/phateus/)
 * [rethaw](https://bitcointalk.org/index.php?action=profile;u=18618)
+
 If your work is represented herein and I didn't give you credit, please let me know. At the moment, I reserve no rights
 to the mining driver or the OpenCL kernel. They were derived from public domain works.
 

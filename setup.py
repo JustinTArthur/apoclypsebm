@@ -39,7 +39,7 @@ if py2exe:
             },
         },
         'console': ['apoclypsebm.py'],
-        'data_files': ['phatk.cl'],
+        'data_files': ['apoclypse0.cl'],
         'zipfile': None,
     })
 

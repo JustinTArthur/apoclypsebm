@@ -84,7 +84,7 @@ __kernel void search(	const uint state0, const uint state1, const uint state2, c
 	
 	W[2] = W2;
 #ifdef VECTORS
-        Vals[4] = (W[3] = ((base + get_global_id(0)) << 1) + (uint2)(0, 1)) + PreVal4;
+        Vals[4] = (W[3] = (u)((base + get_global_id(0)) << 1) + (u)(0, 1)) + PreVal4;
 #else
         Vals[4] = (W[3] = base + get_global_id(0)) + PreVal4;
 #endif

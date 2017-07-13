@@ -319,7 +319,7 @@ class OpenCLMiner(Miner):
 									'BeaverCreek'):
 				self.defines += ' -DBFI_INT'
 
-		kernel_file = open('phatk.cl', 'r')
+		kernel_file = open('apoclypse0.cl', 'r')
 		kernel = kernel_file.read()
 		kernel_file.close()
 		m = md5(); m.update(''.join([self.device.platform.name, self.device.platform.version, self.device.name, self.defines, kernel]))

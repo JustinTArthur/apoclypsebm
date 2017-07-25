@@ -21,7 +21,7 @@ class LongPollingSocket(socket.socket):
             self.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
         self.settimeout(5)
 
-
+# Monkey patch our wrapped socket:
 socket.socket = LongPollingSocket
 
 usage = "usage: %prog [OPTION]... SERVER[#tag]...\nSERVER is one or more [http[s]|stratum://]user:pass@host:port " \
@@ -75,54 +75,59 @@ group.add_option('--vv', dest='vectors', default=[], help='use vectors, default 
 group.add_option('-v', '--vectors', dest='old_vectors', action='store_true', help='use vectors')
 parser.add_option_group(group)
 
-(options, options.servers) = parser.parse_args()
 
-log.verbose = options.verbose
-log.quiet = options.quiet
+def main():
+    options, options.servers = parser.parse_args()
 
-options.rate = max(options.rate, 60) if options.verbose else max(options.rate, 0.1)
+    log.verbose = options.verbose
+    log.quiet = options.quiet
 
-options.version = VERSION
+    options.rate = max(options.rate, 60) if options.verbose else max(options.rate, 0.1)
 
-options.max_update_time = 60
+    options.version = VERSION
 
-options.device = tokenize(options.device, 'device', [])
+    options.max_update_time = 60
 
-options.cutoff_temp = tokenize(options.cutoff_temp, 'cutoff_temp', [95], float)
-options.cutoff_interval = tokenize(options.cutoff_interval, 'cutoff_interval', [0.01], float)
+    options.device = tokenize(options.device, 'device', [])
 
-switch = None
-try:
-    switch = Switch(options)
+    options.cutoff_temp = tokenize(options.cutoff_temp, 'cutoff_temp', [95], float)
+    options.cutoff_interval = tokenize(options.cutoff_interval, 'cutoff_interval', [0.01], float)
 
-    if not options.no_ocl:
-        import OpenCLMiner
+    switch = None
+    try:
+        switch = Switch(options)
 
-        for miner in OpenCLMiner.initialize(options):
-            switch.add_miner(miner)
+        if not options.no_ocl:
+            import OpenCLMiner
 
-    if not options.no_bfl:
-        import BFLMiner
+            for miner in OpenCLMiner.initialize(options):
+                switch.add_miner(miner)
 
-        for miner in BFLMiner.initialize(options):
-            switch.add_miner(miner)
+        if not options.no_bfl:
+            import BFLMiner
 
-    if not switch.servers:
-        print('\nAt least one server is required\n')
-    elif not switch.miners:
-        print('\nNothing to mine on, exiting\n')
-    else:
+            for miner in BFLMiner.initialize(options):
+                switch.add_miner(miner)
+
+        if not switch.servers:
+            print('\nAt least one server is required\n')
+        elif not switch.miners:
+            print('\nNothing to mine on, exiting\n')
+        else:
+            for miner in switch.miners:
+                miner.start()
+            switch.loop()
+    except KeyboardInterrupt:
+        print('\nbye')
+    finally:
         for miner in switch.miners:
-            miner.start()
-        switch.loop()
-except KeyboardInterrupt:
-    print('\nbye')
-finally:
-    for miner in switch.miners:
-        miner.stop()
-    if switch:
-        switch.stop()
+            miner.stop()
+        if switch:
+            switch.stop()
 
-    if not options.no_ocl:
-        OpenCLMiner.shutdown()
-sleep(1.1)
+        if not options.no_ocl:
+            OpenCLMiner.shutdown()
+    sleep(1.1)
+
+if __name__ == "__main__":
+    main()

@@ -19,6 +19,9 @@ At the time of this writing, on-chip implementations of the Bitcoin mining solut
 software in time and joules expended. Under most economic conditions, mining blocks on a Bitcoin chain where
 on-chip implementations are competing would be at tremendous waste of expended resources.
 
+## Installation
+    pip install git+git://github.com/JustinTArthur/apoclypsebm.git[OpenCL]
+
 ## Usage
     apoclypse [OPTION]... SERVER[#tag]...
 

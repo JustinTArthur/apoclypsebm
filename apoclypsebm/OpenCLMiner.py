@@ -1,13 +1,15 @@
 from apoclypsebm.detect import MACOSX
+from apoclypsebm.log import say_line
 from apoclypsebm.Miner import Miner
+from apoclypsebm.sha256 import partial, calculateF
+from apoclypsebm.util import uint32, Object, bytereverse, tokenize, bytearray_to_uint32, uint32_as_bytes
+
 from Queue import Empty
 from hashlib import md5
-from apoclypsebm.log import say_line
-from apoclypsebm.sha256 import partial, calculateF
 from struct import pack, unpack, error
 from threading import Lock
 from time import sleep, time
-from apoclypsebm.util import uint32, Object, bytereverse, tokenize, bytearray_to_uint32, uint32_as_bytes
+import pkgutil
 import sys
 
 
@@ -319,9 +321,7 @@ class OpenCLMiner(Miner):
 									'BeaverCreek'):
 				self.defines += ' -DBFI_INT'
 
-		kernel_file = open('apoclypse0.cl', 'r')
-		kernel = kernel_file.read()
-		kernel_file.close()
+		kernel = pkgutil.get_data('apoclypsebm', 'apoclypse0.cl')
 		m = md5(); m.update(''.join([self.device.platform.name, self.device.platform.version, self.device.name, self.defines, kernel]))
 		cache_name = '%s.elf' % m.hexdigest()
 		binary = None

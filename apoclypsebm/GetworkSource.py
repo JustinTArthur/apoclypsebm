@@ -1,18 +1,15 @@
-from Source import Source
+from apoclypsebm.Source import Source
 from base64 import b64encode
 from httplib import HTTPException
 from json import dumps, loads
-from log import say_exception, say_line
+from apoclypsebm.log import say_exception, say_line
 from struct import pack
 from threading import Thread
 from time import sleep, time
 from urlparse import urlsplit
 import httplib
 import socket
-import socks
-
-
-
+from apoclypsebm import socks
 
 
 class NotAuthorized(Exception): pass

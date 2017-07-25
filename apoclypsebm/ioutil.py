@@ -1,4 +1,4 @@
-from detect import LINUX, WINDOWS
+from apoclypsebm.detect import LINUX, WINDOWS
 from glob import glob
 
 

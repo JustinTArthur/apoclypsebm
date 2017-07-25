@@ -1,16 +1,13 @@
 #!/usr/bin/env python
-from detect import LINUX
-from distribute_setup import use_setuptools
-from setuptools import setup
-from version import VERSION
-use_setuptools()
+from setuptools import setup, find_packages
 
+from apoclypsebm.detect import LINUX
+from apoclypsebm.version import VERSION
 
 try:
     import py2exe
 except ImportError:
     py2exe = None
-
 
 args = {
     'name': 'apoclypsebm',
@@ -20,7 +17,12 @@ args = {
     'author_email': 'justinarthur@gmail.com',
     'url': 'https://github.com/JustinTArthur/apoclypsebm/',
     'install_requires': ['pyserial>=2.6'],
-    'scripts': ['apoclypsebm.py'],
+    'entry_points': {
+        'console_scripts': (
+            'apoclypse = apoclypsebm.command:main',
+        ),
+    },
+    'packages': find_packages(),
 }
 
 if LINUX:
@@ -34,13 +36,12 @@ if py2exe:
                 'optimize': 2,
                 'bundle_files': 2,
                 'compressed': True,
-                'dll_excludes': ['OpenCL.dll', 'w9xpopen.exe', 'boost_python-vc90-mt-1_39.dll'],
-                'excludes': ["Tkconstants", "Tkinter", "tcl", "curses", "_ssl", "pyexpat", "unicodedata", "bz2"],
+                'dll_excludes': ('OpenCL.dll', 'w9xpopen.exe', 'boost_python-vc90-mt-1_39.dll'),
+                'excludes': ("Tkconstants", "Tkinter", "tcl", "curses", "_ssl", "pyexpat", "unicodedata", "bz2"),
             },
         },
-        'console': ['apoclypsebm.py'],
-        'data_files': ['apoclypse0.cl'],
-        'zipfile': None,
+        'package_data': {'apoclypsebm': ('apoclypse0.cl',)},
+        'zipfile': None
     })
 
 setup(**args)

@@ -1,13 +1,13 @@
-from detect import MACOSX
-from Miner import Miner
+from apoclypsebm.detect import MACOSX
+from apoclypsebm.Miner import Miner
 from Queue import Empty
 from hashlib import md5
-from log import say_line
-from sha256 import partial, calculateF
+from apoclypsebm.log import say_line
+from apoclypsebm.sha256 import partial, calculateF
 from struct import pack, unpack, error
 from threading import Lock
 from time import sleep, time
-from util import uint32, Object, bytereverse, tokenize, bytearray_to_uint32, uint32_as_bytes
+from apoclypsebm.util import uint32, Object, bytereverse, tokenize, bytearray_to_uint32, uint32_as_bytes
 import sys
 
 

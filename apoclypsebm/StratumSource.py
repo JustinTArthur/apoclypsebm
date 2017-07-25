@@ -6,7 +6,7 @@ from log import say_exception, say_line
 from struct import pack
 from threading import Thread, Lock, Timer
 from time import sleep, time
-from util import chunks, Object
+from apoclypsebm.util import chunks, Object
 import asynchat
 import asyncore
 import socket

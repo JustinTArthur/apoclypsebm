@@ -1,4 +1,4 @@
-from log import say_exception
+from apoclypsebm.log import say_exception
 from struct import Struct
 import sys
 

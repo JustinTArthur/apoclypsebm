@@ -6,7 +6,7 @@ from serial.serialutil import SerialException
 from struct import pack, unpack, error
 from sys import maxint
 from time import time, sleep
-from util import Object, uint32, bytereverse
+from apoclypsebm.util import Object, uint32, bytereverse
 import serial
 
 CHECK_INTERVAL = 0.01

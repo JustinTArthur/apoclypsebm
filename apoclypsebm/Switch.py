@@ -1,13 +1,13 @@
 from copy import copy
-from log import say_exception, say_line, say_quiet
+from apoclypsebm.log import say_exception, say_line, say_quiet
 from sha256 import hash, sha256, STATE
 from struct import pack, unpack
 from threading import RLock
 from time import time, sleep
-from util import Object, chunks, bytereverse, belowOrEquals, uint32
-import StratumSource
-import log
-import socks
+from apoclypsebm.util import Object, chunks, bytereverse, belowOrEquals, uint32
+from apoclypsebm import StratumSource
+from apoclypsebm import log
+from apoclypsebm import socks
 
 
 class Switch(object):

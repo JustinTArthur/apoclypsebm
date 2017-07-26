@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 
-from Switch import Switch
+from apoclypsebm.Switch import Switch
 from optparse import OptionGroup, OptionParser
 from time import sleep
-from util import tokenize
-from version import VERSION
-import log
+from apoclypsebm.util import tokenize
+from apoclypsebm.version import VERSION
+from apoclypsebm import log
 import socket
 
 

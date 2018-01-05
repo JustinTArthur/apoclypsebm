@@ -1,6 +1,6 @@
 from apoclypsebm.detect import MACOSX
 from apoclypsebm.log import say_line
-from apoclypsebm.Miner import Miner
+from apoclypsebm.mining.base import Miner
 from apoclypsebm.sha256 import partial, calculateF
 from apoclypsebm.util import uint32, Object, bytereverse, tokenize, \
     bytearray_to_uint32, uint32_as_bytes

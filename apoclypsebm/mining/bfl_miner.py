@@ -1,4 +1,4 @@
-from apoclypsebm.Miner import Miner
+from apoclypsebm.mining.base import Miner
 from queue import Empty
 from apoclypsebm.ioutil import find_udev, find_serial_by_id, find_com_ports
 from apoclypsebm.log import say_line, say_exception

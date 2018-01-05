@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from apoclypsebm.Switch import Switch
+from apoclypsebm.switch import Switch
 from optparse import OptionGroup, OptionParser
 from time import sleep
 from apoclypsebm.util import tokenize
@@ -99,15 +99,15 @@ def main():
         switch = Switch(options)
 
         if not options.no_ocl:
-            from apoclypsebm import OpenCLMiner
+            from apoclypsebm.mining import opencl_miner
 
-            for miner in OpenCLMiner.initialize(options):
+            for miner in opencl_miner.initialize(options):
                 switch.add_miner(miner)
 
         if not options.no_bfl:
-            from apoclypsebm import BFLMiner
+            from apoclypsebm.mining import bfl_miner
 
-            for miner in BFLMiner.initialize(options):
+            for miner in bfl_miner.initialize(options):
                 switch.add_miner(miner)
 
         if not switch.servers:
@@ -127,7 +127,7 @@ def main():
             switch.stop()
 
         if not options.no_ocl:
-            OpenCLMiner.shutdown()
+            opencl_miner.shutdown()
     sleep(1.1)
 
 

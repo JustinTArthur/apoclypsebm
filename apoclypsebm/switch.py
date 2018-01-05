@@ -5,7 +5,7 @@ from struct import pack, unpack
 from threading import RLock
 from time import time, sleep
 from apoclypsebm.util import Object, chunks, bytereverse, belowOrEquals, uint32
-from apoclypsebm import StratumSource
+from apoclypsebm.work_sources import stratum
 from apoclypsebm import log
 from apoclypsebm import socks
 
@@ -286,7 +286,7 @@ class Switch(object):
     def server_source(self):
         if not hasattr(self.server(), 'source'):
             if self.server().proto == 'http':
-                from apoclypsebm.GetworkSource import GetworkSource
+                from apoclypsebm.work_sources.getwork import GetworkSource
                 getwork_source = GetworkSource(self)
                 say_line('checking for stratum...')
 
@@ -305,18 +305,18 @@ class Switch(object):
 
     def add_stratum_source(self):
         if self.options.stratum_proxies:
-            stratum_proxy = StratumSource.detect_stratum_proxy(
+            stratum_proxy = stratum.detect_stratum_proxy(
                 self.server().host)
             if stratum_proxy:
                 original_server = copy(self.server())
-                original_server.source = StratumSource.StratumSource(self)
+                original_server.source = stratum.StratumSource(self)
                 self.servers.insert(self.backup_server_index, original_server)
                 self.server().host = stratum_proxy
                 self.server().name += '(p)'
                 log.server = self.server().name
             else:
                 say_line('No proxy found')
-        self.server().source = StratumSource.StratumSource(self)
+        self.server().source = stratum.StratumSource(self)
 
     def server(self):
         return self.servers[self.server_index]

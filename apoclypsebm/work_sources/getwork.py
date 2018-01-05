@@ -10,7 +10,7 @@ from urllib.parse import urlsplit
 
 from apoclypsebm import socks
 from apoclypsebm.log import say_exception, say_line
-from apoclypsebm.Source import Source
+from apoclypsebm.work_sources.base import Source
 
 
 class NotAuthorized(Exception):

@@ -1,4 +1,4 @@
-from apoclypsebm.Source import Source
+from apoclypsebm.work_sources.base import Source
 from binascii import hexlify, unhexlify
 from hashlib import sha256
 from json import dumps, loads

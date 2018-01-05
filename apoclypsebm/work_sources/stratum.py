@@ -1,16 +1,17 @@
-from apoclypsebm.work_sources.base import Source
-from binascii import hexlify, unhexlify
-from hashlib import sha256
-from json import dumps, loads
-from apoclypsebm.log import say_exception, say_line
-from struct import pack
-from threading import Thread, Lock, Timer
-from time import sleep, time
-from apoclypsebm.util import chunks, Object
 import asynchat
 import asyncore
 import socket
+from binascii import hexlify, unhexlify
+from hashlib import sha256
+from json import dumps, loads
+from struct import pack
+from threading import Lock, Thread, Timer
+from time import sleep, time
+
 from apoclypsebm import socks
+from apoclypsebm.log import say_exception, say_line
+from apoclypsebm.util import Object, chunks
+from apoclypsebm.work_sources.base import Source
 
 # import ssl
 
@@ -281,8 +282,8 @@ class StratumSource(Source):
         if not job_id in self.jobs:
             return True
         extranonce2 = result.extranonce2
-        ntime = pack('<I', int(result.time)).encode('hex')
-        hex_nonce = pack('<I', int(nonce)).encode('hex')
+        ntime = hexlify(pack('<I', int(result.time)))
+        hex_nonce = hexlify(pack('<I', int(nonce)))
         id_ = job_id + hex_nonce
         self.submits[id_] = (result.miner, nonce, time())
         return self.send_message({'params': [self.server().user, job_id,

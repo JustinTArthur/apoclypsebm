@@ -1,13 +1,14 @@
+from binascii import hexlify
 from copy import copy
-from apoclypsebm.log import say_exception, say_line, say_quiet
-from apoclypsebm.sha256 import hash, sha256, STATE
 from struct import pack, unpack
 from threading import RLock
-from time import time, sleep
-from apoclypsebm.util import Object, chunks, bytereverse, belowOrEquals, uint32
+from time import sleep, time
+
+from apoclypsebm import log, socks
+from apoclypsebm.log import say_exception, say_line, say_quiet
+from apoclypsebm.sha256 import STATE, hash, sha256
+from apoclypsebm.util import Object, belowOrEquals, bytereverse, chunks, uint32
 from apoclypsebm.work_sources import stratum
-from apoclypsebm import log
-from apoclypsebm import socks
 
 
 class Switch(object):
@@ -195,7 +196,7 @@ class Switch(object):
             h = hash(result.state, result.merkle_end, result.time,
                      result.difficulty, nonce)
             if h[7] != 0:
-                hash6 = pack('<I', int(h[6])).encode('hex')
+                hash6 = hexlify(pack('<I', int(h[6])))
                 say_line('Verification failed, check hardware! (%s, %s)',
                          (result.miner.id(), hash6))
                 return True  # consume this particular result
@@ -203,8 +204,8 @@ class Switch(object):
                 self.diff1_found(bytereverse(h[6]), result.target[6])
                 if belowOrEquals(h[:7], result.target[:7]):
                     is_block = belowOrEquals(h[:7], self.true_target[:7])
-                    hash6 = pack('<I', int(h[6])).encode('hex')
-                    hash5 = pack('<I', int(h[5])).encode('hex')
+                    hash6 = hexlify(pack('<I', int(h[6])))
+                    hash5 = hexlify(pack('<I', int(h[5])))
                     self.sent[nonce] = (is_block, hash6, hash5)
                     if not send_callback(result, nonce):
                         return False

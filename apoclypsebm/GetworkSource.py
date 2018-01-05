@@ -1,21 +1,24 @@
-from apoclypsebm.Source import Source
+import http
+import socket
 from base64 import b64encode
-from httplib import HTTPException
+from binascii import hexlify
 from json import dumps, loads
-from apoclypsebm.log import say_exception, say_line
 from struct import pack
 from threading import Thread
 from time import sleep, time
-from urlparse import urlsplit
-import httplib
-import socket
+from urllib.parse import urlsplit
+
 from apoclypsebm import socks
+from apoclypsebm.log import say_exception, say_line
+from apoclypsebm.Source import Source
 
 
-class NotAuthorized(Exception): pass
+class NotAuthorized(Exception):
+    pass
 
 
-class RPCError(Exception): pass
+class RPCError(Exception):
+    pass
 
 
 class GetworkSource(Source):
@@ -70,15 +73,15 @@ class GetworkSource(Source):
             return connection, False
 
         if proto == 'https':
-            connector = httplib.HTTPSConnection
+            connector = http.client.HTTPSConnection
         else:
-            connector = httplib.HTTPConnection
+            connector = http.client.HTTPConnection
 
         if not self.options.proxy:
-            return connector(host, strict=True), True
+            return connector(host), True
 
         host, port = host.split(':')
-        connection = connector(host, strict=True)
+        connection = connector(host)
         connection.sock = socks.socksocket()
         p = self.options.proxy
         connection.sock.setproxy(p.type, p.host, p.port, True, p.user, p.pwd)
@@ -99,16 +102,16 @@ class GetworkSource(Source):
             response = self.timeout_response(connection, timeout)
             if not response:
                 return None
-            if response.status == httplib.UNAUTHORIZED:
+            if response.status == http.client.UNAUTHORIZED:
                 say_line('Wrong username or password for %s',
                          self.server().name)
                 self.authorization_failed = True
                 raise NotAuthorized()
             r = self.max_redirects
-            while response.status == httplib.TEMPORARY_REDIRECT:
+            while response.status == http.client.TEMPORARY_REDIRECT:
                 response.read()
                 url = response.getheader('Location', '')
-                if r == 0 or url == '': raise HTTPException(
+                if r == 0 or url == '': raise http.client.HTTPException(
                     'Too much or bad redirects')
                 connection.request('GET', url, headers=headers)
                 response = self.timeout_response(connection, timeout)
@@ -162,19 +165,19 @@ class GetworkSource(Source):
             self.switch.connection_ok()
 
             return result['result']
-        except (IOError, httplib.HTTPException, ValueError, socks.ProxyError,
+        except (IOError, http.client.HTTPException, ValueError, socks.ProxyError,
                 NotAuthorized, RPCError):
             self.stop()
         except Exception:
             say_exception()
 
     def send_internal(self, result, nonce):
-        data = ''.join([result.header.encode('hex'),
-                        pack('<3I', int(result.time), int(result.difficulty),
-                             int(nonce)).encode('hex'),
+        data = ''.join([hexlify(result.header),
+                        hexlify(pack('<3I', int(result.time), int(result.difficulty),
+                             int(nonce))),
                         '000000800000000000000000000000000000000000000000000000000000000000000000000000000000000080020000'])
         accepted = self.getwork(data)
-        if accepted != None:
+        if accepted is not None:
             self.switch.report(result.miner, nonce, accepted)
             return True
 
@@ -216,7 +219,7 @@ class GetworkSource(Source):
                             result['result']['data'][56:64],
                             result['result']['data'][48:56]))
                 except (
-                IOError, httplib.HTTPException, ValueError, socks.ProxyError,
+                IOError, http.client.HTTPException, ValueError, socks.ProxyError,
                 NotAuthorized, RPCError):
                     say_exception('long poll IO error')
                     self.close_lp_connection()

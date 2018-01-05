@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 
-from apoclypsebm.switch import Switch
+import socket
 from optparse import OptionGroup, OptionParser
 from time import sleep
+
+from apoclypsebm import log
+from apoclypsebm.switch import Switch
 from apoclypsebm.util import tokenize
 from apoclypsebm.version import VERSION
-from apoclypsebm import log
-import socket
 
 
 class LongPollingSocket(socket.socket):
@@ -99,15 +100,15 @@ def main():
         switch = Switch(options)
 
         if not options.no_ocl:
-            from apoclypsebm.mining import opencl_miner
+            from apoclypsebm.mining import opencl
 
-            for miner in opencl_miner.initialize(options):
+            for miner in opencl.initialize(options):
                 switch.add_miner(miner)
 
         if not options.no_bfl:
-            from apoclypsebm.mining import bfl_miner
+            from apoclypsebm.mining import bfl
 
-            for miner in bfl_miner.initialize(options):
+            for miner in bfl.initialize(options):
                 switch.add_miner(miner)
 
         if not switch.servers:
@@ -127,7 +128,7 @@ def main():
             switch.stop()
 
         if not options.no_ocl:
-            opencl_miner.shutdown()
+            opencl.shutdown()
     sleep(1.1)
 
 

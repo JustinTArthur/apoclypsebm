@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from apoclypsebm.Switch import Switch
 from optparse import OptionGroup, OptionParser
@@ -20,6 +20,7 @@ class LongPollingSocket(socket.socket):
             self.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
             self.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
         self.settimeout(5)
+
 
 # Monkey patch our wrapped socket:
 socket.socket = LongPollingSocket
@@ -98,13 +99,13 @@ def main():
         switch = Switch(options)
 
         if not options.no_ocl:
-            import OpenCLMiner
+            from apoclypsebm import OpenCLMiner
 
             for miner in OpenCLMiner.initialize(options):
                 switch.add_miner(miner)
 
         if not options.no_bfl:
-            import BFLMiner
+            from apoclypsebm import BFLMiner
 
             for miner in BFLMiner.initialize(options):
                 switch.add_miner(miner)
@@ -128,6 +129,7 @@ def main():
         if not options.no_ocl:
             OpenCLMiner.shutdown()
     sleep(1.1)
+
 
 if __name__ == "__main__":
     main()

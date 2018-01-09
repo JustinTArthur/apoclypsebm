@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import socket
+import sys
 from optparse import OptionGroup, OptionParser
 from time import sleep
 
@@ -95,9 +96,11 @@ def main():
     options.cutoff_temp = tokenize(options.cutoff_temp, 'cutoff_temp', [95], float)
     options.cutoff_interval = tokenize(options.cutoff_interval, 'cutoff_interval', [0.01], float)
 
+    options_encoding = sys.stdin.encoding
+
     switch = None
     try:
-        switch = Switch(options)
+        switch = Switch(options, options_encoding)
 
         if not options.no_ocl:
             from apoclypsebm.mining import opencl

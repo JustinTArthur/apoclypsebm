@@ -358,10 +358,17 @@ class OpenCLMiner(Miner):
                 self.defines += ' -DBFI_INT'
 
         kernel = pkgutil.get_data('apoclypsebm', 'apoclypse0.cl')
-        m = md5();
-        m.update(''.join(
-            [self.device.platform.name, self.device.platform.version,
-             self.device.name, self.defines, kernel]))
+        m = md5(
+            b''.join(
+                (
+                    self.device.platform.name.encode('utf-8'),
+                    self.device.platform.version.encode('utf-8'),
+                    self.device.name.encode('utf-8'),
+                    self.defines.encode('utf-8'),
+                    kernel
+                )
+            )
+        )
         cache_name = '%s.elf' % m.hexdigest()
         binary = None
         try:
@@ -369,7 +376,7 @@ class OpenCLMiner(Miner):
             self.program = cl.Program(self.context, [self.device],
                                       [binary.read()]).build(self.defines)
         except (IOError, cl.LogicError):
-            self.program = cl.Program(self.context, kernel).build(self.defines)
+            self.program = cl.Program(self.context, kernel.decode('ascii')).build(self.defines)
             if (self.defines.find('-DBFI_INT') != -1):
                 patchedBinary = self.patch(self.program.binaries[0])
                 self.program = cl.Program(self.context, [self.device],

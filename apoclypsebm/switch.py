@@ -1,4 +1,4 @@
-from binascii import hexlify
+from binascii import hexlify, unhexlify
 from copy import copy
 from struct import pack, unpack
 from threading import RLock
@@ -12,10 +12,11 @@ from apoclypsebm.work_sources import stratum
 
 
 class Switch(object):
-    def __init__(self, options):
+    def __init__(self, options, options_encoding):
         self.lock = RLock()
         self.miners = []
         self.options = options
+        self.options_encoding = options_encoding
         self.last_work = 0
         self.update_time = True
         self.max_update_time = options.max_update_time
@@ -78,6 +79,12 @@ class Switch(object):
             s.host, s.name = s.host.split('#')
         else:
             s.name = s.host
+
+        # Assume the user wrote/pasted in the exact bytes they wanted.
+        # Since sys.argv is already decoded as a character string before optparse
+        # we re-encode it back to bytes using their terminal encoding.
+        s.user_bytes = s.user.encode(self.options_encoding)
+        s.pwd_bytes = s.pwd.encode(self.options_encoding)
 
         return s
 
@@ -163,10 +170,10 @@ class Switch(object):
         if block_header:
             job = Object()
 
-            binary_data = block_header.decode('hex')
+            binary_data = unhexlify(block_header)
             data0 = list(unpack('<16I', binary_data[:64])) + ([0] * 48)
 
-            job.target = unpack('<8I', target.decode('hex'))
+            job.target = unpack('<8I', unhexlify(target))
             job.header = binary_data[:68]
             job.merkle_end = uint32(unpack('<I', binary_data[64:68])[0])
             job.time = uint32(unpack('<I', binary_data[68:72])[0])
@@ -189,7 +196,7 @@ class Switch(object):
         true_target = '%064x' % (
         int(bits[2:], 16) * 2 ** (8 * (int(bits[:2], 16) - 3)),)
         true_target = ''.join(list(chunks(true_target, 2))[::-1])
-        self.true_target = unpack('<8I', true_target.decode('hex'))
+        self.true_target = unpack('<8I', unhexlify(true_target))
 
     def send(self, result, send_callback):
         for nonce in result.miner.nonce_generator(result.nonces):

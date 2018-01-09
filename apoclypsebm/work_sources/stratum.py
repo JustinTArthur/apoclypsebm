@@ -145,10 +145,10 @@ class StratumSource(Source):
         for hash_ in j.merkle_branch:
             merkle_root = sha256(
                 sha256(merkle_root + unhexlify(hash_)).digest()).digest()
-        merkle_root_reversed = ''
+        merkle_root_reversed = b''
         for word in chunks(merkle_root, 4):
             merkle_root_reversed += word[::-1]
-        merkle_root = hexlify(merkle_root_reversed)
+        merkle_root = merkle_root_reversed.hex()
 
         j.block_header = ''.join(
             [j.version, j.prevhash, merkle_root, j.ntime, j.nbits])
@@ -202,7 +202,7 @@ class StratumSource(Source):
             # mining.set_difficulty
             elif message['method'] == 'mining.set_difficulty':
                 say_line("Setting new difficulty: %s", message['params'][0])
-                self.server_difficulty = min(MIN_DIFFICULTY, BASE_DIFFICULTY /
+                self.server_difficulty = min(MIN_DIFFICULTY, BASE_DIFFICULTY //
                                              message['params'][0])
 
             # client.reconnect
@@ -292,6 +292,7 @@ class StratumSource(Source):
 
     def send_message(self, message):
         data = dumps(message) + '\n'
+        data = data.encode('utf-8')
         try:
             # self.handler.push(data)
 
@@ -321,17 +322,17 @@ class Handler(asynchat.async_chat):
     def __init__(self, socket, map_, parent):
         asynchat.async_chat.__init__(self, socket, map_)
         self.parent = parent
-        self.data = ''
-        self.set_terminator('\n')
+        self.data = b''
+        self.set_terminator(b'\n')
 
     def handle_close(self):
         self.close()
         self.parent.handler = None
         self.parent.socket = None
 
-    def handle_error(self):
-        say_exception()
-        self.parent.stop()
+    #def handle_error(self):
+    #    say_exception()
+    #    self.parent.stop()
 
     def collect_incoming_data(self, data):
         self.data += data
@@ -339,4 +340,4 @@ class Handler(asynchat.async_chat):
     def found_terminator(self):
         message = loads(self.data)
         self.parent.handle_message(message)
-        self.data = ''
+        self.data = b''

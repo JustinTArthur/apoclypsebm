@@ -32,7 +32,7 @@ class GetworkSource(Source):
         self.postdata = {'method': 'getwork', 'id': 'json'}
         self.headers = {"User-Agent": self.switch.user_agent,
                         "Authorization": 'Basic ' + b64encode(
-                            '%s:%s' % (self.server().user, self.server().pwd)),
+                            b'%b:%b' % (self.server().user_bytes, self.server().pwd_bytes)).decode('ascii'),
                         "X-Mining-Extensions": 'hostlist midstate rollntime'}
         self.long_poll_url = ''
 

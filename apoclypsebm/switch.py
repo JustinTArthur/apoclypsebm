@@ -179,7 +179,7 @@ class Switch(object):
             job.time = uint32(unpack('<I', binary_data[68:72])[0])
             job.difficulty = uint32(unpack('<I', binary_data[72:76])[0])
             job.state = sha256(STATE, data0)
-            job.targetQ = 2 ** 256 / int(''.join(list(chunks(target, 2))[::-1]),
+            job.targetQ = 2 ** 256 // int(''.join(list(chunks(target, 2))[::-1]),
                                          16)
             job.job_id = job_id
             job.extranonce2 = extranonce2

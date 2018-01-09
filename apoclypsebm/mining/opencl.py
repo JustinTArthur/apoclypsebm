@@ -478,7 +478,7 @@ class OpenCLMiner(Miner):
                             else:
                                 data2 = data2[offset: offset + size]
                                 patched = ''
-                                for j in range(len(data2) / 8):
+                                for j in range(len(data2) // 8):
                                     instruction, = unpack('Q', data2[
                                                                j * 8: j * 8 + 8])
                                     if (

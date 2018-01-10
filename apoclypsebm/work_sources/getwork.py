@@ -8,7 +8,8 @@ from threading import Thread
 from time import sleep, time
 from urllib.parse import urlsplit
 
-from apoclypsebm import socks
+import socks
+
 from apoclypsebm.log import say_exception, say_line
 from apoclypsebm.work_sources.base import Source
 

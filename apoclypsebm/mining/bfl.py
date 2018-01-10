@@ -1,13 +1,16 @@
-from apoclypsebm.mining.base import Miner
+from binascii import unhexlify
 from queue import Empty
-from apoclypsebm.ioutil import find_udev, find_serial_by_id, find_com_ports
-from apoclypsebm.log import say_line, say_exception
-from serial.serialutil import SerialException
-from struct import pack, unpack, error
+from struct import error, pack, unpack
 from sys import maxsize
-from time import time, sleep
-from apoclypsebm.util import Object, uint32, bytereverse
+from time import sleep, time
+
 import serial
+from serial.serialutil import SerialException
+
+from apoclypsebm.ioutil import find_com_ports, find_serial_by_id, find_udev
+from apoclypsebm.log import say_exception, say_line
+from apoclypsebm.mining.base import Miner
+from apoclypsebm.util import Object, bytereverse, uint32
 
 CHECK_INTERVAL = 0.01
 
@@ -162,7 +165,7 @@ class BFLMiner(Miner):
         for nonce in nonces.split(b','):
             if len(nonce) != 8: continue
             try:
-                yield unpack('<I', nonce.decode('hex')[::-1])[0]
+                yield unpack('<I', unhexlify(nonce)[::-1])[0]
             except error:
                 pass
 

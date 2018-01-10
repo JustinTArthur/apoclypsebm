@@ -4,7 +4,9 @@ from struct import pack, unpack
 from threading import RLock
 from time import sleep, time
 
-from apoclypsebm import log, socks
+import socks
+
+from apoclypsebm import log
 from apoclypsebm.log import say_exception, say_line, say_quiet
 from apoclypsebm.sha256 import STATE, hash, sha256
 from apoclypsebm.util import Object, belowOrEquals, bytereverse, chunks, uint32

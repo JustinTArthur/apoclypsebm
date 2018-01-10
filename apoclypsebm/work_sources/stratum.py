@@ -8,7 +8,8 @@ from struct import pack
 from threading import Lock, Thread, Timer
 from time import sleep, time
 
-from apoclypsebm import socks
+import socks
+
 from apoclypsebm.log import say_exception, say_line
 from apoclypsebm.util import Object, chunks
 from apoclypsebm.work_sources.base import Source

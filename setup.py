@@ -16,7 +16,7 @@ args = {
     'author': 'Justin T. Arthur',
     'author_email': 'justinarthur@gmail.com',
     'url': 'https://github.com/JustinTArthur/apoclypsebm/',
-    'install_requires': ['pyserial>=2.6'],
+    'install_requires': ('pyserial>=2.6', 'PySocks>=1.6.0'),
     'extras_require': {'OpenCL': ("pyopencl>=2017.2",)},
     'entry_points': {
         'console_scripts': (

@@ -1,6 +1,6 @@
 # apoclypsebm - The ApoCLypse Bitcoin Miner
 ## Background
-This hobby project undertakes the quixotic task of maintaining a fast modern Bitcoin miner for programmable compute
+This hobby project undertakes the quixotic task of maintaining a modern Bitcoin miner for programmable compute
 devices like GPUs. It was forked from the PyOpenCL Bitcoin Miner (poclbm), a project authored by 
 [m0mchil](https://github.com/m0mchil/) and contributors.
 
@@ -20,7 +20,7 @@ software in time and joules expended. Under most economic conditions, mining blo
 on-chip implementations are competing would be at tremendous waste of expended resources.
 
 ## Installation
-    pip install git+git://github.com/JustinTArthur/apoclypsebm.git[OpenCL]
+    pip3 install git+git://github.com/JustinTArthur/apoclypsebm.git[OpenCL]
 
 ## Usage
     apoclypse [OPTION]... SERVER[#tag]...

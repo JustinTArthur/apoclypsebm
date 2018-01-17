@@ -74,8 +74,8 @@ group.add_option('-f', '--frames', dest='frames', default=[],
                  help='will try to bring single kernel execution to 1/frames seconds, default=30, increase this for'
                       ' less desktop lag')
 group.add_option('-s', '--sleep', dest='frameSleep', default=[], help='sleep per frame in seconds, default 0')
-group.add_option('--vv', dest='vectors', default=[], help='use vectors, default false')
-group.add_option('-v', '--vectors', dest='old_vectors', action='store_true', help='use vectors')
+group.add_option('--vv', dest='vectors', default=[], help='Specifies size of SIMD vectors per selected device. Only size 0 (no vectors) and 2 supported for now. Comma separated for each device. e.g. 0,2,2')
+group.add_option('-v', '--vectors', dest='old_vectors', action='store_true', help='Use 2-item vectors for all devices.')
 parser.add_option_group(group)
 
 

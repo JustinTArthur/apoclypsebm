@@ -14,6 +14,7 @@ args = {
     'version': VERSION,
     'description': 'The ApoCLypse Bitcoin Miner',
     'long_description': open('README.md').read(),
+    'long_description_content_type': 'text/markdown',
     'author': 'Justin T. Arthur',
     'author_email': 'justinarthur@gmail.com',
     'url': 'https://github.com/JustinTArthur/apoclypsebm/',
@@ -24,6 +25,7 @@ args = {
         ),
     },
     'packages': find_packages(),
+    'classifiers': ('License :: Public Domain',)
 }
 
 if LINUX:

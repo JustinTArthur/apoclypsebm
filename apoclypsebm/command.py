@@ -21,7 +21,7 @@ class LongPollingSocket(socket.socket):
         if type == socket.SOCK_STREAM:
             self.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
             self.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-        self.settimeout(5)
+        self.settimeout(20)
 
 
 # Monkey patch our wrapped socket:
@@ -42,6 +42,10 @@ parser.add_option('--stratum-proxies', dest='stratum_proxies', action='store_tru
                   help="search for and use stratum proxies in subnet")
 parser.add_option('-d', '--device', dest='device', default=[],
                   help='comma separated device IDs, by default will use all (for OpenCL - only GPU devices)')
+parser.add_option('-a', '--address', dest='address',
+                  help='Bitcoin address to spend the block reward to if allowed. Required for solo mining, ignored with stratum or getwork sources.')
+parser.add_option('--coinbase-msg', dest='coinbase_msg', default='ApoCLypse',
+                  help='Custom text to include in the coinbase of the generation tx if allowed, encoded as UTF-8. default=ApoCLypse')
 
 group = OptionGroup(parser, "Miner Options")
 group.add_option('-r', '--rate', dest='rate', default=1,

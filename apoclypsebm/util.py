@@ -8,6 +8,11 @@ class Object(object):
 
 
 def uint32(x):
+    """
+    Ensure only first 32-bits are used in the integer. e.g. if we get an integer
+    that can only be represented with 64 bits, this gives us the integer
+    represented by the first 32 of those 64 bits.
+    """
     return x & 0xffffffff
 
 

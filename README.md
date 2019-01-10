@@ -14,23 +14,33 @@ It features an OpenCL Kernel that has incorporated ideas or code from:
 If your work is represented herein and I didn't give you credit, please let me know. At the moment, I reserve no rights
 to the mining driver or the OpenCL kernel. They were derived from public domain works.
 
-## New in Version 1.0.0
-* First release following the fork from [m0mchil/poclbm](https://github.com/m0mchil/poclbm). ([diff](https://github.com/m0mchil/poclbm/compare/master...JustinTArthur:v1.0.0))
-* Migrated code to Python 3. Requires Python 3.5+
-* Fix kernel compilation error in clang-based OpenCL compilers like macOS OpenCL and
-AMD ROCm.
-* Fix for not submitting shares to stratum servers reporting pdifficulty when server-side pdifficulty is below 1. By [luke-jr](https://github.com/luke-jr).
-* Minor performance improvements
-
 ## Economy
 At the time of writing, on-chip implementations of the Bitcoin mining algorithm will outperform this
 software in both time and joules expended. Under most conditions, mining blocks on a Bitcoin chain where
 on-chip implementations are competing would be at a tremendous waste of expended resources.
 
-## Installation
-Python 3.5+ must be installed first. To install latest from master branch on GitHub:
+## New in Version 1.1.0
+This release focused on supporting the `getblocktemplate` call proposed in
+BIP 22 and BIP 23 and implemented by Bitcoin Core and btcd. This finally allows
+mining without a pool if you supply an address to mine coins to at the command
+line.
 
-    pip3 install git+git://github.com/JustinTArthur/apoclypsebm.git
+HTTP work sources now default to using `getblocktemplate` instead of `getwork`.
+This feature is new and might have bugs that could lead to loss of potential
+mining rewards.
+
+It looks like the work sourcing threads run into i/o issues occasionally due to
+using the not-thread-safe Python http lib. I don't aim to address this as most
+of the threaded communication ought to be completely replaced by an event runner
+like asyncio or trio at some point.
+
+Thanks to @momchil for the original `getwork` code, @luke-jr @sipa and @vsergeev
+for helping me understand getblocktemplate. 
+
+## Installation
+In an environment with Python 3.5+:
+
+    pip3 install apoclypsebm
 
 ## Usage
     apoclypse [OPTION]... SERVER[#tag]...
@@ -53,6 +63,15 @@ Python 3.5+ must be installed first. To install latest from master branch on Git
   -d DEVICE, --device=DEVICE
                         comma separated device IDs, by default will use all
                         (for OpenCL - only GPU devices)
+  -a ADDRESS, --address=ADDRESS
+                        Bitcoin address to spend the block reward to if
+                        allowed. Required for solo mining, ignored with
+                        stratum or getwork sources.
+  --coinbase-msg=COINBASE_MSG
+                        Custom text to include in the coinbase of the
+                        generation tx if allowed, encoded as UTF-8.
+                        default=ApoCLypse
+
 
   Miner Options:
     -r RATE, --rate=RATE

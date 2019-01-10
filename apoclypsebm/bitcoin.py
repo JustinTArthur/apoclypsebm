@@ -2,9 +2,9 @@
 Bitcoin Network and Consensus Rules Code
 Derived from BIP reference code and the Electrum project.
 
-https://github.com/spesmilo/electrum (MIT license)
 https://github.com/bitcoin/bips (various licenses)
-
+https://github.com/spesmilo/electrum (MIT license)
+https://github.com/vsergeev/ntgbtminer (MIT license)
 """
 from enum import IntEnum
 from hashlib import sha256

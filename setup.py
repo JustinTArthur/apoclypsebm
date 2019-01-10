@@ -12,7 +12,8 @@ except ImportError:
 args = {
     'name': 'apoclypsebm',
     'version': VERSION,
-    'description': 'Python Driver for an OpenCL Bitcoin Miner',
+    'description': 'The ApoCLypse Bitcoin Miner',
+    'long_description': open('README.md').read(),
     'author': 'Justin T. Arthur',
     'author_email': 'justinarthur@gmail.com',
     'url': 'https://github.com/JustinTArthur/apoclypsebm/',

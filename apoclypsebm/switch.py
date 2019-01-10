@@ -30,7 +30,7 @@ class Switch(object):
         self.last_server = None
         self.server_map = {}
 
-        self.user_agent = 'poclbm/' + options.version
+        self.user_agent = 'apoclypsebm/' + options.version
 
         self.difficulty = 0
         self.true_target = None
@@ -274,8 +274,9 @@ class Switch(object):
         return False
 
     def queue_work(self, server, block_header, target=None, job_id=None,
-                   extranonce2=None, miner=None):
+                   extranonce2=None, miner=None, transactions=None):
         work = self.decode(server, block_header, target, job_id, extranonce2)
+        work.transactions = transactions
         with self.lock:
             if not miner:
                 miner = self.miners[0]
@@ -295,21 +296,26 @@ class Switch(object):
 
     def server_source(self):
         if not hasattr(self.server(), 'source'):
+            http_source = None
             if self.server().proto == 'http':
+                from apoclypsebm.work_sources.getblocktemplate import GetblocktemplateSource
+                http_source = GetblocktemplateSource(self)
+            elif self.server().proto == 'getwork+http':
                 from apoclypsebm.work_sources.getwork import GetworkSource
-                getwork_source = GetworkSource(self)
-                say_line('checking for stratum...')
+                http_source = GetworkSource(self)
+            else:
+                self.add_stratum_source()
 
-                stratum_host = getwork_source.detect_stratum()
+            if http_source:
+                say_line('checking for stratum...')
+                stratum_host = http_source.detect_stratum()
                 if stratum_host:
-                    getwork_source.close_connection()
+                    http_source.close_connection()
                     self.server().proto = 'stratum'
                     self.server().host = stratum_host
                     self.add_stratum_source()
                 else:
-                    self.server().source = getwork_source
-            else:
-                self.add_stratum_source()
+                    self.server().source = http_source
 
         return self.server().source
 

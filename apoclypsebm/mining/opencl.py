@@ -300,6 +300,7 @@ class OpenCLMiner(Miner):
                 result.nonces = output[:]
                 result.job_id = work.job_id
                 result.extranonce2 = work.extranonce2
+                result.transactions = work.transactions
                 result.server = work.server
                 result.miner = self
                 self.switch.put(result)

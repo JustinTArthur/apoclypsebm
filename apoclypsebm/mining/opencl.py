@@ -289,7 +289,7 @@ class OpenCLMiner(Miner):
                 threads_run = 0
 
             queue.finish()
-            cl.enqueue_read_buffer(queue, output_buffer, output)
+            cl.enqueue_copy(queue, output_buffer, output)
             queue.finish()
 
             if output[-1]:
@@ -308,7 +308,7 @@ class OpenCLMiner(Miner):
                 result.miner = self
                 self.switch.put(result)
                 output[:] = b'\x00' * len(output)
-                cl.enqueue_write_buffer(queue, output_buffer, output)
+                cl.enqueue_copy(queue, output, output_buffer)
 
             if not self.switch.update_time:
                 if nonces_left < 3 * global_threads * self.frames:

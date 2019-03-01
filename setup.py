@@ -24,7 +24,7 @@ args = {
             'apoclypse = apoclypsebm.command:main',
         ),
     },
-    'packages': ('apoclypsebm',),
+    'packages': find_packages(include=('apoclypsebm', 'apoclypsebm.*',)),
     'package_data': {'apoclypsebm': ('apoclypse0.cl',)},
     'python_requires': '>=3.6',
     'classifiers': ('License :: Public Domain',)

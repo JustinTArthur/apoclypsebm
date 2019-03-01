@@ -18,13 +18,14 @@ args = {
     'author': 'Justin T. Arthur',
     'author_email': 'justinarthur@gmail.com',
     'url': 'https://github.com/JustinTArthur/apoclypsebm/',
-    'install_requires': ("pyopencl>=2017.2", 'pyserial>=2.6', 'PySocks>=1.6.0'),
+    'install_requires': ["pyopencl>=2017.2,<=2018.1", 'pyserial>=2.6', 'PySocks>=1.6.0'],
     'entry_points': {
         'console_scripts': (
             'apoclypse = apoclypsebm.command:main',
         ),
     },
     'packages': find_packages(),
+    'package_data': {'apoclypsebm': ('apoclypse0.cl',)},
     'classifiers': ('License :: Public Domain',)
 }
 

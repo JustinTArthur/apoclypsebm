@@ -1,8 +1,10 @@
 # apoclypsebm - The ApoCLypse Bitcoin Miner
 ## Background
-This hobby project maintained by [Justin T. Arthur](https://github.com/JustinTArthur) undertakes the quixotic task of maintaining a modern Bitcoin miner for programmable compute
-devices like GPUs. It was forked from the PyOpenCL Bitcoin Miner (poclbm), a project authored by 
-[m0mchil](https://github.com/m0mchil) and contributors.
+This hobby project maintained by
+[Justin T. Arthur](https://github.com/JustinTArthur) undertakes the quixotic
+task of maintaining a modern Bitcoin miner for programmable compute devices like
+GPUs. It was forked from the PyOpenCL Bitcoin Miner (poclbm), a project authored
+by [m0mchil](https://github.com/m0mchil) and contributors.
 
 It features an OpenCL Kernel that has incorporated ideas or code from:
 * [diapolo](https://github.com/diapolo)
@@ -11,13 +13,22 @@ It features an OpenCL Kernel that has incorporated ideas or code from:
 * [phataeus](https://sourceforge.net/u/phateus/)
 * [rethaw](https://bitcointalk.org/index.php?action=profile;u=18618)
 
-If your work is represented herein and I didn't give you credit, please let me know. At the moment, I reserve no rights
-to the mining driver or the OpenCL kernel. They were derived from public domain works.
+If your work is represented herein and I didn't give you credit, please let me
+know. At the moment, I reserve no rights to the mining driver or the OpenCL
+kernel. They were derived from public domain works.
 
 ## Economy
-At the time of writing, on-chip implementations of the Bitcoin mining algorithm will outperform this
-software in both time and joules expended. Under most conditions, mining blocks on a Bitcoin chain where
-on-chip implementations are competing would be at a tremendous waste of expended resources.
+At the time of writing, on-chip implementations of the Bitcoin mining algorithm
+will outperform this software in both time and joules expended. Under most
+conditions, mining blocks on a Bitcoin chain where on-chip implementations are
+competing would be at a tremendous waste of expended resources.
+
+## New in Version 1.1.3
+Bug fix release. Installation from PyPI (e.g. with pip) had some
+glaring issues. Additionally, PyOpenCL removed deprecated APIs we were using.
+I've pinned us to PyOpenCL releases prior to their pybind11 integration so that
+this project remains installable from pip (see
+[inducer/pyopencl#278](https://github.com/inducer/pyopencl/issues/278)).
 
 ## New in Version 1.1.0
 This release focused on supporting the `getblocktemplate` call proposed in
@@ -45,7 +56,7 @@ In an environment with Python 3.5+:
 ## Usage
     apoclypse [OPTION]... SERVER[#tag]...
 
-`SERVER` is one or more [http[s]|stratum://]user:pass@host:port          (required)  
+`SERVER` is one or more [http[s]|stratum://]user:pass@host:port (required)  
 [#tag] is an optional per server user-friendly name displayed in stats.
 
 ### Options

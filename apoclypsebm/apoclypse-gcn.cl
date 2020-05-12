@@ -40,7 +40,7 @@ __constant ulong L = 0x198c7e2a2;
 
 #ifdef VECTORS
   #define Ch(x, y, z) ({ \
-    u result; \
+    u result = (u)(0, 0); \
     __asm__ __volatile__( \
       "V_BFI_B32 %0 %2 %3 %4\n\t" \
       "V_BFI_B32 %1 %5 %6 %7" \
@@ -51,7 +51,7 @@ __constant ulong L = 0x198c7e2a2;
   })
 #else
   #define Ch(x, y, z) ({ \
-    u result; \
+    u result = (u)0; \
     __asm__ __volatile__( \
       "V_BFI_B32 %0 %1 %2 %3" : "=v" (result) : "v" (x), "v" (y), "v" (z) \
     ); \

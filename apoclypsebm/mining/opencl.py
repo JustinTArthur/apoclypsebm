@@ -166,8 +166,7 @@ class OpenCLMiner(Miner):
                                          iAdapterIndex)
 
     def id(self):
-        return str(self.options.platform) + ':' + str(
-            self.device_index) + ':' + self.device_name
+        return f'{self.options.platform}:{self.device_index}:{self.device_name}'
 
     def nonce_generator(self, nonces):
         for i in range(0, len(nonces) - 4, 4):
@@ -179,11 +178,16 @@ class OpenCLMiner(Miner):
         say_line('started OpenCL miner on platform %d, device %d (%s)',
                  (self.options.platform, self.device_index, self.device_name))
 
-        (self.defines, rate_divisor, hashspace) = (
-        vectors_definition(), 500, 0x7FFFFFFF) if self.vectors else (
-        '', 1000, 0xFFFFFFFF)
-        self.defines += (' -DOUTPUT_SIZE=' + str(self.output_size))
-        self.defines += (' -DOUTPUT_MASK=' + str(self.output_size - 1))
+        self.defines, rate_divisor, hashspace = (
+            vectors_definition(), 500, 0x7FFFFFFF
+        ) if self.vectors else (
+            '', 1000, 0xFFFFFFFF
+        )
+
+        self.defines += (
+            f' -DOUTPUT_SIZE={self.output_size}'
+            f' -DOUTPUT_MASK={self.output_size - 1}'
+        )
 
         self.load_kernel()
         frame = 1.0 / max(self.frames, 3)
@@ -351,43 +355,35 @@ class OpenCLMiner(Miner):
                                     'Zacate', 'WinterPark', 'BeaverCreek'):
                 self.defines += ' -DBFI_INT'
 
-        kernel = pkgutil.get_data('apoclypsebm', 'apoclypse0.cl')
+        kernel = pkgutil.get_data('apoclypsebm', 'apoclypse-0.cl')
         m = md5(
-            b''.join(
-                (
-                    self.device.platform.name.encode('utf-8'),
-                    self.device.platform.version.encode('utf-8'),
-                    self.device.name.encode('utf-8'),
-                    self.defines.encode('utf-8'),
-                    kernel
-                )
-            )
+            f'{self.device.platform.name}{self.device.platform.version}'
+            f'{self.device.name}{self.defines}'.encode('utf-8')
         )
-        cache_name = '%s.elf' % m.hexdigest()
-        binary = None
+        m.update(kernel)
+        cache_name = f'{m.hexdigest()}.elf'
+
         try:
-            binary = open(cache_name, 'rb')
-            self.program = cl.Program(self.context, [self.device],
-                                      [binary.read()]).build(self.defines)
+            with open(cache_name, 'rb') as binary:
+                self.program = cl.Program(self.context, [self.device],
+                                          [binary.read()]).build(self.defines)
         except (IOError, cl.LogicError):
             kernel = kernel.decode('ascii')
             self.program = cl.Program(self.context, kernel).build(self.defines)
             if self.defines.find('-DBFI_INT') != -1:
                 patched_binary = self.patch(self.program.binaries[0])
-                self.program = cl.Program(self.context,
-                                          [self.device],
-                                          [patched_binary]).build(self.defines)
-            with open(cache_name, 'wb') as binary_w:
-                binary_w.write(self.program.binaries[0])
-        finally:
-            if binary:
-                binary.close()
+                self.program = cl.Program(self.context, [self.device], [patched_binary]).build(self.defines)
+            with open(cache_name, 'wb') as binary:
+                binary.write(self.program.binaries[0])
 
         self.kernel = self.program.search
 
         if not self.worksize:
             self.worksize = self.kernel.get_work_group_info(
-                cl.kernel_work_group_info.WORK_GROUP_SIZE, self.device)
+                cl.kernel_work_group_info.WORK_GROUP_SIZE,
+                self.device
+            )
+            say_line('Set worksize to %s from device info.', self.worksize)
 
     def get_temperature(self):
         temperature = ADLTemperature()

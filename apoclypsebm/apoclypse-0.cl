@@ -37,6 +37,9 @@ __constant ulong L = 0x198c7e2a2;
 #endif
 
 #ifdef BFI_INT
+	// amd_bytealign to be replaced with BFI_INT on Evergreen platform
+	// by patching the kernel binary. amd_bytealign is incorrect here
+	// otherwise.
 	#define Ch(x, y, z) amd_bytealign(x, y, z)
 #else 
 	#define Ch(x, y, z) bitselect(z, y, x)

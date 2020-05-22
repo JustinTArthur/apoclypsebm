@@ -201,9 +201,10 @@ class OpenCLMiner(Miner):
         host_output = bytearray(blank_output)
         cl_output = cl.Buffer(
             self.context,
-            cl.mem_flags.WRITE_ONLY | cl.mem_flags.USE_HOST_PTR,
-            hostbuf=host_output
+            cl.mem_flags.WRITE_ONLY,
+            size=len(host_output)
         )
+        cl.enqueue_copy(queue, cl_output, blank_output)
         self.kernel.set_arg(20, cl_output)
 
         work = None
@@ -311,8 +312,7 @@ class OpenCLMiner(Miner):
                 result.server = work.server
                 result.miner = self
                 self.switch.put(result)
-                host_output[:] = blank_output
-                cl.enqueue_copy(queue, cl_output, host_output)
+                cl.enqueue_copy(queue, cl_output, blank_output)
 
             if not self.switch.update_time:
                 if nonces_left < 3 * global_threads * self.frames:

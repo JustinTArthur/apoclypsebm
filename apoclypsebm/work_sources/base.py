@@ -1,5 +1,5 @@
 from queue import Queue
-from time import time
+from time import monotonic
 
 
 class Source(object):
@@ -13,10 +13,10 @@ class Source(object):
 
     def loop(self):
         self.should_stop = False
-        self.last_failback = time()
+        self.last_failback = monotonic()
 
     def check_failback(self):
-        if self.switch.server_index != 0 and time() - self.last_failback > self.options.failback:
+        if self.switch.server_index != 0 and monotonic() - self.last_failback > self.options.failback:
             self.stop()
             return True
 

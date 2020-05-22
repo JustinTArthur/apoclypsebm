@@ -5,7 +5,7 @@ from binascii import hexlify, unhexlify
 from json import dumps, loads
 from struct import pack
 from threading import Event, Thread
-from time import sleep, time
+from time import monotonic, sleep
 from urllib.parse import urlsplit
 
 import socks
@@ -151,11 +151,12 @@ class GetblocktemplateSource(Source):
 
     def timeout_response(self, connection, timeout):
         if timeout:
-            start = time()
+            start = monotonic()
             connection.sock.settimeout(timeout)
             response = None
             while not response:
-                if self.should_stop or time() - start > timeout: return
+                if self.should_stop or monotonic() - start > timeout:
+                    return
                 try:
                     response = connection.getresponse()
                 except socket.timeout:

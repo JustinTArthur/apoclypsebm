@@ -6,7 +6,7 @@ from hashlib import sha256
 from json import dumps, loads
 from struct import pack
 from threading import Lock, Thread, Timer
-from time import sleep, time
+from time import sleep, time, monotonic
 
 import socks
 
@@ -64,7 +64,7 @@ class StratumSource(Source):
         self.subscribed = False
         self.authorized = None
         self.submits = {}
-        self.last_submits_cleanup = time()
+        self.last_submits_cleanup = monotonic()
         self.server_difficulty = BASE_DIFFICULTY
         self.jobs = {}
         self.current_job = None
@@ -242,8 +242,8 @@ class StratumSource(Source):
                 accepted = message['result']
                 self.switch.report(miner, nonce, accepted)
                 del self.submits[message['id']]
-                if time() - self.last_submits_cleanup > 3600:
-                    now = time()
+                if monotonic() - self.last_submits_cleanup > 3600:
+                    now = monotonic()
                     for key, value in self.submits.items():
                         if now - value[2] > 3600:
                             del self.submits[key]

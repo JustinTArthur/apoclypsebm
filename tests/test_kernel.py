@@ -18,21 +18,26 @@ def file_safe_sanitize(name):
 def try_kernel(platform_idx, device_idx):
     platforms = cl.get_platforms()
     device = platforms[platform_idx].get_devices()[device_idx]
+    worksize = device.get_info(cl.device_info.MAX_WORK_GROUP_SIZE)
     context = cl.Context([device], None, None)
     output_size = 256
     host_out_buffer = bytearray((output_size + 1) * 4)
     cl_out_buffer = cl.Buffer(
         context,
-        cl.mem_flags.WRITE_ONLY | cl.mem_flags.USE_HOST_PTR,
-        hostbuf=host_out_buffer
+        cl.mem_flags.WRITE_ONLY,
+        size=len(host_out_buffer)
+        # hostbuf=host_out_buffer
     )
 
-    defines = f'-DOUTPUT_SIZE={output_size} -DOUTPUT_MASK={output_size - 1}'
+    defines = (
+          f'-D OUTPUT_SIZE={output_size} -D OUTPUT_MASK={output_size - 1} '
+          f'-D WORK_GROUP_SIZE={worksize}'
+    )
     if device.extensions.find('cl_amd_media_ops') != -1:
         print('AMD bitalign defined!')
         defines += ' -DBITALIGN'
 
-    kernel_code = pkgutil.get_data('apoclypsebm', 'apoclypse-gcn.cl').decode('ascii')
+    kernel_code = pkgutil.get_data('apoclypsebm', 'apoclypse-0.cl').decode('ascii')
     print(f'Building with {defines}')
     program = cl.Program(context, kernel_code).build(defines)
 
@@ -45,9 +50,6 @@ def try_kernel(platform_idx, device_idx):
 
     kernel = program.search
 
-    worksize = kernel.get_work_group_info(
-        cl.kernel_work_group_info.WORK_GROUP_SIZE, device
-    )
     frame = 1.0 / DEFAULT_FRAMES
     unit = worksize * 256
     global_threads = unit * 10
@@ -69,7 +71,7 @@ def try_kernel(platform_idx, device_idx):
     for i in range(-1, len(binary_data) - 1, 4):
         new_word = binary_data[i+4:None if i==-1 else i:-1]
         swapped_bin += new_word
-        print(f'slicing {i + 3}:{i or None}:{-1} gives {new_word.hex()}')
+        # print(f'slicing {i + 3}:{i or None}:{-1} gives {new_word.hex()}')
     print(f'Initial: {binary_data.hex()}')
     print(f'SHA2 chunked: {swapped_bin.hex()}')
 
@@ -116,11 +118,11 @@ def try_kernel(platform_idx, device_idx):
     print(f'Starting with base {base}')
     kernel.set_arg(14, uint32_as_bytes(base)[::-1])
     cmd_queue = cl.CommandQueue(context)
+    cl.enqueue_copy(cmd_queue, cl_out_buffer, host_out_buffer)
     cl.enqueue_nd_range_kernel(cmd_queue, kernel,
                                (global_threads,), (worksize,))
 
-    cmd_queue.finish()
-    cl.enqueue_copy(cmd_queue, cl_out_buffer, host_out_buffer)
+    cl.enqueue_copy(cmd_queue, host_out_buffer, cl_out_buffer)
     cmd_queue.finish()
     print(f'Got {len(host_out_buffer)} outputs:')
     print(' '.join([f'{nonce:02x}' for nonce in host_out_buffer]))

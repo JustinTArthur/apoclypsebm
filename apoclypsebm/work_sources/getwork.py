@@ -5,7 +5,7 @@ from binascii import hexlify
 from json import dumps, loads
 from struct import pack
 from threading import Thread
-from time import sleep, time
+from time import monotonic, sleep
 from urllib.parse import urlsplit
 
 import socks
@@ -139,11 +139,11 @@ class GetworkSource(Source):
 
     def timeout_response(self, connection, timeout):
         if timeout:
-            start = time()
+            start = monotonic()
             connection.sock.settimeout(5)
             response = None
             while not response:
-                if self.should_stop or time() - start > timeout: return
+                if self.should_stop or monotonic() - start > timeout: return
                 try:
                     response = connection.getresponse()
                 except socket.timeout:

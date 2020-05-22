@@ -1,20 +1,22 @@
 ## New in Version 1.1.4
 * Added `-k`/`--kernel` option for specifying which of available kernels to
 use. Only `apoclypse-0` and `apoclypse-loopy` are available at the moment.
-* New "apoclypse-loopy" kernel that has been added is an alternative
-implementation of the poclbm/phoenix/phatk kernel that uses for-loops. On some
-older platforms, this provides better performance. On modern AMD and nVidia
-software+hardware stacks, the basic apoclypse-0 kernel is fine.
+* New "apoclypse-loopy" kernel is an alternative implementation of the
+poclbm/phoenix/phatk kernel that uses for-loops. On some older platforms, this
+provides better performance. On modern AMD and nVidia software+hardware
+stacks, the basic apoclypse-0 kernel is fine.
 * The `-w`/`--worksize` option now uses kernel code to configure the work
 group size when the OpenCL stack tries to enforce a smaller maximum size. This
 allows for up to 1024-sized work groups on recent AMD and nVidia
 drivers+devices.
+* Fix for discrete cards doing wasted work because output buffer wasn't being
+copied back to host correctly.
 * Fix for when stratum servers supply a floating point difficulty number
 [#7](JustinTArthur/apoclypsebm#7). In this case, we floor the result of any
 arithmetic performed against it.
 * Use monotonic timers for rate calculations so that system time changes
 don't impact them.
-* Upgrade to latest PyOpenCL now that pybind11 is fixing their header
+* Upgrade to latest PyOpenCL now that pybind11 is fixing the header
 situation.
 
 ## New in Version 1.1.3

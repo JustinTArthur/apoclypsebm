@@ -25,7 +25,7 @@ args = {
         ),
     },
     'packages': find_packages(include=('apoclypsebm', 'apoclypsebm.*',)),
-    'package_data': {'apoclypsebm': ('apoclypse0.cl',)},
+    'package_data': {'apoclypsebm': ('apoclypse-0.cl', 'apoclypse-loopy.cl')},
     'python_requires': '>=3.6',
     'classifiers': ('License :: Public Domain',)
 }

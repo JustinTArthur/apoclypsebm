@@ -203,15 +203,17 @@ class StratumSource(Source):
             # mining.set_difficulty
             elif message['method'] == 'mining.set_difficulty':
                 say_line("Setting new difficulty: %s", message['params'][0])
-                self.server_difficulty = min(MIN_DIFFICULTY, BASE_DIFFICULTY //
-                                             message['params'][0])
+                self.server_difficulty = min(MIN_DIFFICULTY, int(BASE_DIFFICULTY //
+                                             message['params'][0]))
 
             # client.reconnect
             elif message['method'] == 'client.reconnect':
                 address, port = self.server().host.split(':', 1)
                 (new_address, new_port, timeout) = message['params'][:3]
-                if new_address: address = new_address
-                if new_port != None: port = new_port
+                if new_address:
+                    address = new_address
+                if new_port is not None:
+                    port = new_port
                 say_line("%s asked us to reconnect to %s:%d in %d seconds",
                          (self.server().name, address, port, timeout))
                 self.server().host = address + ':' + str(port)

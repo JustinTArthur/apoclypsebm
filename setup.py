@@ -18,7 +18,7 @@ args = {
     'author': 'Justin T. Arthur',
     'author_email': 'justinarthur@gmail.com',
     'url': 'https://github.com/JustinTArthur/apoclypsebm/',
-    'install_requires': ["pyopencl>=2017.2,<=2018.1", 'pyserial>=2.6', 'PySocks>=1.6.0'],
+    'install_requires': ["pyopencl>=2017.2,<=2020.1", 'pyserial>=2.6', 'PySocks>=1.6.0'],
     'entry_points': {
         'console_scripts': (
             'apoclypse = apoclypsebm.command:main',
@@ -45,7 +45,7 @@ if py2exe:
                 'excludes': ("Tkconstants", "Tkinter", "tcl", "curses", "_ssl", "pyexpat", "unicodedata", "bz2"),
             },
         },
-        'package_data': {'apoclypsebm': ('apoclypse0.cl',)},
+        'package_data': {'apoclypsebm': ('apoclypse-0.cl', 'apoclypse-loopy.cl')},
         'zipfile': None
     })
 

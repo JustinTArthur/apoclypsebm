@@ -72,12 +72,15 @@ group = OptionGroup(parser,
                     "Use --vv to specify per-device vectors usage."
                     )
 group.add_option('-p', '--platform', dest='platform', default=-1, help='use platform by id', type='int')
+group.add_option('-k', '--kernel', dest='kernel', default='apoclypse-0',
+                  choices=('apoclypse-0', 'apoclypse-loopy',),
+                  help='OpenCL Kernel to use. Defaults to apoclypse-0')
 group.add_option('-w', '--worksize', dest='worksize', default=[],
-                 help='work group size, default is maximum returned by OpenCL')
+                 help='work group size, default is maximum reported by the driver.')
 group.add_option('-f', '--frames', dest='frames', default=[],
                  help='will try to bring single kernel execution to 1/frames seconds, default=30, increase this for'
                       ' less desktop lag')
-group.add_option('-s', '--sleep', dest='frameSleep', default=[], help='sleep per frame in seconds, default 0')
+group.add_option('-s', '--sleep', dest='frame_sleep', default=[], help='sleep per frame in seconds, default 0')
 group.add_option('--vv', dest='vectors', default=[], help='Specifies size of SIMD vectors per selected device. Only size 0 (no vectors) and 2 supported for now. Comma separated for each device. e.g. 0,2,2')
 group.add_option('-v', '--vectors', dest='old_vectors', action='store_true', help='Use 2-item vectors for all devices.')
 parser.add_option_group(group)

@@ -37,6 +37,9 @@ __constant ulong L = 0x198c7e2a2;
 #endif
 
 #ifdef BFI_INT
+	// amd_bytealign to be replaced with BFI_INT on Evergreen platform
+	// by patching the kernel binary. amd_bytealign is incorrect here
+	// otherwise.
 	#define Ch(x, y, z) amd_bytealign(x, y, z)
 #else 
 	#define Ch(x, y, z) bitselect(z, y, x)
@@ -64,7 +67,7 @@ __constant ulong L = 0x198c7e2a2;
 // SHA round without W calc
 #define sharound(n) { Vals[(131 - n) & 7] += t1(n); Vals[(135 - n) & 7] = t1(n) + s0(n) + ma(n); }
 
-__kernel void search(	const uint state0, const uint state1, const uint state2, const uint state3,
+__kernel __attribute__((reqd_work_group_size(WORK_GROUP_SIZE, 1, 1))) void search(	const uint state0, const uint state1, const uint state2, const uint state3,
 						const uint state4, const uint state5, const uint state6, const uint state7,
 						const uint B1, const uint C1, const uint D1,
 						const uint F1, const uint G1, const uint H1,

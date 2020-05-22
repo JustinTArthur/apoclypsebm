@@ -1,11 +1,11 @@
 from queue import Queue
 from threading import Thread
-from time import time
+from time import monotonic
 
 
 class Miner(object):
-    def __init__(self, device_index, options):
-        self.device_index = device_index
+    def __init__(self, device_idx, options):
+        self.device_idx = device_idx
         self.options = options
 
         self.update_time_counter = 1
@@ -20,7 +20,7 @@ class Miner(object):
     def start(self):
         self.should_stop = False
         Thread(target=self.mining_thread).start()
-        self.start_time = time()
+        self.start_time = monotonic()
 
     def stop(self, message=None):
         if message:
@@ -28,8 +28,8 @@ class Miner(object):
         self.should_stop = True
 
     def update_rate(self, now, iterations, t, targetQ, rate_divisor=1000):
-        self.rate = int((iterations / t) / rate_divisor)
-        self.rate = float(self.rate) / 1000
+        self.rate = (iterations / t) / rate_divisor
+        self.rate /= 1000
         if self.accept_hist:
             LAH = self.accept_hist.pop()
             if LAH[1] != self.share_count[1]:

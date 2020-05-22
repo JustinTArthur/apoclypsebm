@@ -82,10 +82,10 @@ def initialize(options):
 
 
 class BFLMiner(Miner):
-    def __init__(self, device_index, port, options):
-        super(BFLMiner, self).__init__(device_index, options)
+    def __init__(self, device_idx, port, options):
+        super(BFLMiner, self).__init__(device_idx, options)
         self.port = port
-        self.device_name = 'BFL:' + str(self.device_index)
+        self.device_name = f'BFL:{self.device_idx}'
 
         self.check_interval = CHECK_INTERVAL
         self.last_job = None
@@ -224,7 +224,7 @@ class BFLMiner(Miner):
                             t = now - last_rated
                             if t > self.options.rate:
                                 self.update_rate(now, iterations, t, targetQ)
-                                last_rated = now;
+                                last_rated = now
                                 iterations = 0
 
                             if result != b'NO-NONCE\n':

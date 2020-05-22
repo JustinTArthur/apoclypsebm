@@ -4,9 +4,8 @@ from hashlib import md5
 from queue import Empty
 from struct import error, pack, unpack
 from threading import Lock
-from time import sleep, time
+from time import monotonic, sleep
 
-from apoclypsebm.detect import MACOSX
 from apoclypsebm.log import say_line
 from apoclypsebm.mining.base import Miner
 from apoclypsebm.sha256 import calculateF, partial
@@ -35,12 +34,6 @@ if PYOPENCL:
         print('\nNo OpenCL\n')
 
 
-def vectors_definition():
-    if MACOSX:
-        return '-D VECTORS'
-    return '-DVECTORS'
-
-
 def is_amd(platform):
     if 'amd' in platform.name.lower():
         return True
@@ -56,13 +49,13 @@ def has_amd():
 
 if OPENCL:
     try:
-        from adl3 import ADL_Main_Control_Create, ADL_Main_Memory_Alloc, \
-            ADL_Main_Control_Destroy, \
-            ADLTemperature, ADL_Overdrive5_Temperature_Get, \
-            ADL_Adapter_NumberOfAdapters_Get, \
-            AdapterInfo, LPAdapterInfo, ADL_Adapter_AdapterInfo_Get, \
-            ADL_Adapter_ID_Get, \
-            ADL_OK
+        from adl3 import (
+            ADL_Main_Control_Create, ADL_Main_Memory_Alloc,
+            ADL_Main_Control_Destroy, ADLTemperature,
+            ADL_Overdrive5_Temperature_Get, ADL_Adapter_NumberOfAdapters_Get,
+            AdapterInfo, LPAdapterInfo, ADL_Adapter_AdapterInfo_Get,
+            ADL_Adapter_ID_Get, ADL_OK
+        )
         from ctypes import sizeof, byref, c_int, cast
         from collections import namedtuple
 
@@ -93,10 +86,10 @@ def initialize(options):
         return []
 
     options.worksize = tokenize(options.worksize, 'worksize')
-    options.frames = tokenize(options.frames, 'frames', [30])
-    options.frameSleep = tokenize(options.frameSleep, 'frameSleep', cast=float)
-    options.vectors = [True] if options.old_vectors else tokenize(
-        options.vectors, 'vectors', [False], bool)
+    options.frames = tokenize(options.frames, 'frames', (30,))
+    options.frame_sleep = tokenize(options.frame_sleep, 'frame_sleep', cast=float)
+    options.vectors = (True,) if options.old_vectors else tokenize(
+        options.vectors, 'vectors', (False,), bool)
 
     platforms = cl.get_platforms()
 
@@ -105,7 +98,7 @@ def initialize(options):
         print('Wrong platform or more than one OpenCL platforms found, use'
               '--platform to select one of the following\n')
         for i in range(len(platforms)):
-            print('[%d]\t%s' % (i, platforms[i].name))
+            print(f'[{i}]\t{platforms[i].name}')
         sys.exit()
 
     if options.platform == -1:
@@ -116,7 +109,7 @@ def initialize(options):
     if not options.device and devices:
         print('\nOpenCL devices:\n')
         for i in range(len(devices)):
-            print('[%d]\t%s' % (i, devices[i].name))
+            print(f'[{i}]\t{devices[i].name}')
         print('\nNo devices specified, using all GPU devices\n')
 
     miners = [
@@ -131,43 +124,47 @@ def initialize(options):
         miner = miners[i]
         miner.worksize = options.worksize[min(i, len(options.worksize) - 1)]
         miner.frames = options.frames[min(i, len(options.frames) - 1)]
-        miner.frameSleep = options.frameSleep[
-            min(i, len(options.frameSleep) - 1)]
+        miner.frame_sleep = options.frame_sleep[
+            min(i, len(options.frame_sleep) - 1)
+        ]
         miner.vectors = options.vectors[min(i, len(options.vectors) - 1)]
         miner.cutoff_temp = options.cutoff_temp[
-            min(i, len(options.cutoff_temp) - 1)]
+            min(i, len(options.cutoff_temp) - 1)
+        ]
         miner.cutoff_interval = options.cutoff_interval[
-            min(i, len(options.cutoff_interval) - 1)]
+            min(i, len(options.cutoff_interval) - 1)
+        ]
     return miners
 
 
 class OpenCLMiner(Miner):
-    def __init__(self, device_index, options):
-        super(OpenCLMiner, self).__init__(device_index, options)
+    def __init__(self, device_idx, options):
+        super(OpenCLMiner, self).__init__(device_idx, options)
         self.output_size = 0x100
 
         self.device = (
-            cl.get_platforms()[options.platform].get_devices()[device_index]
+            cl.get_platforms()[options.platform].get_devices()[device_idx]
         )
         self.device_name = self.device.name.strip('\r\n \x00\t')
         self.frames = 30
 
-        self.worksize = self.frameSleep = self.rate = self.estimated_rate = 0
+        self.worksize = self.frame_sleep = self.rate = self.estimated_rate = 0
+        self.execution_local_dims = None
         self.vectors = False
 
-        self.adapterIndex = None
-        if (ADL and
-                is_amd(self.device.platform)
-                and self.device.type == cl.device_type.GPU):
+        self.adapter_idx = None
+        if (
+            ADL
+            and is_amd(self.device.platform)
+            and self.device.type == cl.device_type.GPU
+        ):
             with adl_lock:
-                self.adapterIndex = self.get_adapter_info()
-                if self.adapterIndex:
-                    self.adapterIndex = (self.adapterIndex[self.device_index].
-                                         iAdapterIndex)
+                self.adapter_idx = self.get_adapter_info()
+                if self.adapter_idx:
+                    self.adapter_idx = self.adapter_idx[self.device_idx].iAdapterIndex
 
     def id(self):
-        return str(self.options.platform) + ':' + str(
-            self.device_index) + ':' + self.device_name
+        return f'{self.options.platform}:{self.device_idx}:{self.device_name}'
 
     def nonce_generator(self, nonces):
         for i in range(0, len(nonces) - 4, 4):
@@ -177,13 +174,18 @@ class OpenCLMiner(Miner):
 
     def mining_thread(self):
         say_line('started OpenCL miner on platform %d, device %d (%s)',
-                 (self.options.platform, self.device_index, self.device_name))
+                 (self.options.platform, self.device_idx, self.device_name))
 
-        (self.defines, rate_divisor, hashspace) = (
-        vectors_definition(), 500, 0x7FFFFFFF) if self.vectors else (
-        '', 1000, 0xFFFFFFFF)
-        self.defines += (' -DOUTPUT_SIZE=' + str(self.output_size))
-        self.defines += (' -DOUTPUT_MASK=' + str(self.output_size - 1))
+        self.defines, rate_divisor, hashspace = (
+            '-D VECTORS', 500, 0x7FFFFFFF
+        ) if self.vectors else (
+            '', 1000, 0xFFFFFFFF
+        )
+
+        self.defines += (
+            f' -D OUTPUT_SIZE={self.output_size}'
+            f' -D OUTPUT_MASK={self.output_size - 1}'
+        )
 
         self.load_kernel()
         frame = 1.0 / max(self.frames, 3)
@@ -192,14 +194,17 @@ class OpenCLMiner(Miner):
 
         queue = cl.CommandQueue(self.context)
 
-        last_rated_pace = last_rated = last_n_time = last_temperature = time()
+        last_rated_pace = last_rated = last_n_time = last_temperature = monotonic()
         base = last_hash_rate = threads_run_pace = threads_run = 0
-        output = bytearray((self.output_size + 1) * 4)
-        output_buffer = cl.Buffer(self.context,
-                                  cl.mem_flags.WRITE_ONLY |
-                                  cl.mem_flags.USE_HOST_PTR,
-                                  hostbuf=output)
-        self.kernel.set_arg(20, output_buffer)
+
+        blank_output = b'\x00' * ((self.output_size + 1) * 4)
+        host_output = bytearray(blank_output)
+        cl_output = cl.Buffer(
+            self.context,
+            cl.mem_flags.WRITE_ONLY | cl.mem_flags.USE_HOST_PTR,
+            hostbuf=host_output
+        )
+        self.kernel.set_arg(20, cl_output)
 
         work = None
         temperature = 0
@@ -207,7 +212,7 @@ class OpenCLMiner(Miner):
             if self.should_stop:
                 return
 
-            sleep(self.frameSleep)
+            sleep(self.frame_sleep)
 
             if (not work) or (not self.work_queue.empty()):
                 try:
@@ -219,7 +224,7 @@ class OpenCLMiner(Miner):
                         continue
                     nonces_left = hashspace
                     state = work.state
-                    f = [0] * 8
+                    f = [0, 0, 0, 0, 0, 0, 0, 0]
                     state2 = partial(state, work.merkle_end, work.time,
                                      work.difficulty, f)
                     calculateF(state, work.merkle_end, work.time,
@@ -251,7 +256,7 @@ class OpenCLMiner(Miner):
             if temperature < self.cutoff_temp:
                 self.kernel.set_arg(14, uint32_as_bytes(base))
                 cl.enqueue_nd_range_kernel(queue, self.kernel,
-                                           (global_threads,), (self.worksize,))
+                                           (global_threads,), self.execution_local_dims)
 
                 nonces_left -= global_threads
                 threads_run_pace += global_threads
@@ -259,11 +264,11 @@ class OpenCLMiner(Miner):
                 base = uint32(base + global_threads)
             else:
                 threads_run_pace = 0
-                last_rated_pace = time()
+                last_rated_pace = monotonic()
                 sleep(self.cutoff_interval)
 
-            now = time()
-            if self.adapterIndex != None:
+            now = monotonic()
+            if self.adapter_idx is not None:
                 t = now - last_temperature
                 if temperature >= self.cutoff_temp or t > 1:
                     last_temperature = now
@@ -288,27 +293,26 @@ class OpenCLMiner(Miner):
                 last_rated = now
                 threads_run = 0
 
-            queue.finish()
-            cl.enqueue_copy(queue, output_buffer, output)
+            cl.enqueue_copy(queue, host_output, cl_output)
             queue.finish()
 
-            if output[-1]:
+            if host_output[-1]:
                 result = Object()
                 result.header = work.header
                 result.merkle_end = work.merkle_end
                 result.time = work.time
                 result.difficulty = work.difficulty
                 result.target = work.target
-                result.state = list(state)
-                result.nonces = output[:]
+                result.state = tuple(state)
+                result.nonces = host_output[:]
                 result.job_id = work.job_id
                 result.extranonce2 = work.extranonce2
                 result.transactions = work.transactions
                 result.server = work.server
                 result.miner = self
                 self.switch.put(result)
-                output[:] = b'\x00' * len(output)
-                cl.enqueue_copy(queue, output, output_buffer)
+                host_output[:] = blank_output
+                cl.enqueue_copy(queue, cl_output, host_output)
 
             if not self.switch.update_time:
                 if nonces_left < 3 * global_threads * self.frames:
@@ -342,58 +346,63 @@ class OpenCLMiner(Miner):
                     self.update_time_counter = 1
 
     def load_kernel(self):
+        max_worksize = self.device.get_info(cl.device_info.MAX_WORK_GROUP_SIZE)
+        if not self.worksize:
+            self.worksize = max_worksize
+            if self.options.verbose:
+                say_line('Set worksize to %s from device info.', self.worksize)
+        self.defines += f' -D WORK_GROUP_SIZE={self.worksize}'
+        if self.worksize > max_worksize:
+            # Exceeding the max advertised work group size
+            # The overriding size will only be configure
+            # at compile time isntead of at execution.
+            self.execution_local_dims = None
+        else:
+            self.execution_local_dims = (self.worksize,)
+
         self.context = cl.Context([self.device], None, None)
         if self.device.extensions.find('cl_amd_media_ops') != -1:
-            self.defines += ' -DBITALIGN'
+            self.defines += ' -D BITALIGN'
             if self.device_name in ('Cedar', 'Redwood', 'Juniper', 'Cypress',
                                     'Hemlock', 'Caicos', 'Turks', 'Barts',
                                     'Cayman', 'Antilles', 'Wrestler',
                                     'Zacate', 'WinterPark', 'BeaverCreek'):
-                self.defines += ' -DBFI_INT'
+                self.defines += ' -D BFI_INT'
 
-        kernel = pkgutil.get_data('apoclypsebm', 'apoclypse0.cl')
+        kernel = pkgutil.get_data('apoclypsebm', f'{self.options.kernel}.cl')
         m = md5(
-            b''.join(
-                (
-                    self.device.platform.name.encode('utf-8'),
-                    self.device.platform.version.encode('utf-8'),
-                    self.device.name.encode('utf-8'),
-                    self.defines.encode('utf-8'),
-                    kernel
-                )
-            )
+            f'{self.device.platform.name}{self.device.platform.version}'
+            f'{self.device.name}{self.defines}'.encode('utf-8')
         )
-        cache_name = '%s.elf' % m.hexdigest()
-        binary = None
+        m.update(kernel)
+        cache_name = f'{m.hexdigest()}.elf'
+
         try:
-            binary = open(cache_name, 'rb')
-            self.program = cl.Program(self.context, [self.device],
-                                      [binary.read()]).build(self.defines)
+            with open(cache_name, 'rb') as binary:
+                self.program = cl.Program(self.context, [self.device],
+                                          [binary.read()]).build(self.defines)
         except (IOError, cl.LogicError):
             kernel = kernel.decode('ascii')
             self.program = cl.Program(self.context, kernel).build(self.defines)
-            if self.defines.find('-DBFI_INT') != -1:
+            if self.defines.find('-D BFI_INT') != -1:
                 patched_binary = self.patch(self.program.binaries[0])
-                self.program = cl.Program(self.context,
-                                          [self.device],
-                                          [patched_binary]).build(self.defines)
-            with open(cache_name, 'wb') as binary_w:
-                binary_w.write(self.program.binaries[0])
-        finally:
-            if binary:
-                binary.close()
+                self.program = cl.Program(self.context, [self.device], [patched_binary]).build(self.defines)
+            with open(cache_name, 'wb') as binary:
+                binary.write(self.program.binaries[0])
 
         self.kernel = self.program.search
 
-        if not self.worksize:
-            self.worksize = self.kernel.get_work_group_info(
-                cl.kernel_work_group_info.WORK_GROUP_SIZE, self.device)
+        if self.options.verbose:
+            compiled_worksize = self.kernel.get_work_group_info(
+                cl.kernel_work_group_info.COMPILE_WORK_GROUP_SIZE, self.device
+            )
+            say_line('Compiled work size: %s', compiled_worksize)
 
     def get_temperature(self):
         temperature = ADLTemperature()
         temperature.iSize = sizeof(temperature)
 
-        if ADL_Overdrive5_Temperature_Get(self.adapterIndex, 0,
+        if ADL_Overdrive5_Temperature_Get(self.adapter_idx, 0,
                                           byref(temperature)) == ADL_OK:
             return temperature.iTemperature / 1000.0
         return 0
@@ -422,17 +431,18 @@ class OpenCLMiner(Miner):
 
         deviceAdapter = namedtuple(
             'DeviceAdapter',
-            ('AdapterIndex', 'AdapterID', 'BusNumber', 'UDID'))
+            ('AdapterIndex', 'AdapterID', 'BusNumber', 'UDID')
+        )
 
         devices = []
         for adapter in AdapterInfoArray:
             index = adapter.iAdapterIndex
-            busNum = adapter.iBusNumber
+            bus_num = adapter.iBusNumber
             udid = adapter.strUDID
 
-            adapterID = c_int(-1)
+            adapter_id = c_int(-1)
 
-            if ADL_Adapter_ID_Get(index, byref(adapterID)) != ADL_OK:
+            if ADL_Adapter_ID_Get(index, byref(adapter_id)) != ADL_OK:
                 say_line(
                     "ADL_Adapter_ID_Get failed, "
                     "cutoff temperature disabled for %s",
@@ -442,12 +452,12 @@ class OpenCLMiner(Miner):
 
             found = False
             for device in devices:
-                if device.AdapterID.value == adapterID.value:
+                if device.AdapterID.value == adapter_id.value:
                     found = True
                     break
 
             if found is False:
-                devices.append(deviceAdapter(index, adapterID, busNum, udid))
+                devices.append(deviceAdapter(index, adapter_id, bus_num, udid))
 
         for device in devices:
             adapter_info.append(AdapterInfoArray[device.AdapterIndex])
@@ -455,44 +465,38 @@ class OpenCLMiner(Miner):
         return adapter_info
 
     def patch(self, data):
-        pos = data.find('\x7fELF', 1)
-        if pos != -1 and data.find('\x7fELF', pos + 1) == -1:
+        pos = data.find(b'\x7fELF', 1)
+        if pos != -1 and data.find(b'\x7fELF', pos + 1) == -1:
             data2 = data[pos:]
             try:
-                (id, a, b, c, d, e, f, offset, g, h, i, j, entrySize, count,
+                (id, a, b, c, d, e, f, offset, g, h, i, j, entry_size, count,
                  index) = unpack('QQHHIIIIIHHHHHH', data2[:52])
                 if id == 0x64010101464c457f and offset != 0:
-                    (a, b, c, d, nameTableOffset, size, e, f, g, h) = unpack(
+                    (a, b, c, d, name_tbl_offset, size, e, f, g, h) = unpack(
                         'IIIIIIIIII',
-                        data2[offset + index * entrySize:
-                              offset + (index + 1) * entrySize]
+                        data2[offset + index * entry_size:offset + (index + 1) * entry_size]
                     )
-                    header = data2[offset:offset + count * entrySize]
+                    header = data2[offset:offset + count * entry_size]
                     first_text = True
                     for i in range(count):
-                        entry = header[i * entrySize:(i + 1) * entrySize]
-                        (nameIndex, a, b, c, offset, size, d, e, f, g) = unpack(
-                            'IIIIIIIIII', entry)
-                        name_offset = nameTableOffset + nameIndex
-                        name = data2[name_offset:
-                                     data2.find('\x00', name_offset)]
+                        entry = header[i * entry_size:(i + 1) * entry_size]
+                        name_idx, a, b, c, offset, size, d, e, f, g = unpack('IIIIIIIIII', entry)
+                        name_offset = name_tbl_offset + name_idx
+                        name = data2[name_offset:data2.find(b'\x00', name_offset)]
                         if name == '.text':
                             if first_text:
                                 first_text = False
                             else:
                                 data2 = data2[offset:offset + size]
-                                patched = ''
+                                patched = b''
                                 for j in range(len(data2) // 8):
-                                    instruction, = unpack('Q',
-                                                          data2[j * 8:
-                                                                j * 8 + 8])
-                                    if ((instruction & 0x9003f00002001000) ==
-                                            0x0001a00000000000):
-                                        instruction ^= (0x0001a00000000000
-                                                        ^
-                                                        0x0000c00000000000)
+                                    instruction, = unpack('Q', data2[j * 8:j * 8 + 8])
+                                    if (
+                                        (instruction & 0x9003f00002001000) == 0x0001a00000000000
+                                    ):
+                                        instruction ^= (0x0001a00000000000 ^ 0x0000c00000000000)
                                     patched += pack('Q', instruction)
-                                return ''.join([data[:pos + offset], patched,
+                                return b''.join([data[:pos + offset], patched,
                                                 data[pos + offset + size:]])
             except error:
                 pass

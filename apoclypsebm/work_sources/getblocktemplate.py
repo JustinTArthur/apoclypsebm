@@ -192,7 +192,7 @@ class GetblocktemplateSource(Source):
                     self.lp_connection, proto, host)
                 connection = self.lp_connection
                 if changed:
-                    say_line(f"LP connected to {host}")
+                    say_line(f'LP connected to {host}')
                     self.long_poll_last_host = host
 
             else:
@@ -202,8 +202,7 @@ class GetblocktemplateSource(Source):
                                           self.server().host)
                 connection = self.connection
                 if changed:
-                    say_line(
-                        f"Connected to {self.server().host}")
+                    say_line(f'Connected to {self.server().host}')
 
             postdata = {
                 'method': 'getblocktemplate',
@@ -285,7 +284,7 @@ class GetblocktemplateSource(Source):
             self.switch.connection_ok()
 
             reject_reason = result['result']
-            say_line(f'proposal response: %s', reject_reason)
+            say_line('proposal response: %s', reject_reason)
             return result['result']
 
         except (IOError, http.client.HTTPException, ValueError, socks.ProxyError,

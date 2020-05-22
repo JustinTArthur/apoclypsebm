@@ -23,23 +23,7 @@ will outperform this software in both time and joules expended. Under most
 conditions, mining blocks on a Bitcoin chain where on-chip implementations are
 competing would be at a tremendous waste of expended resources.
 
-## New in Version 1.1.3
-Bug fix release. Installation from PyPI (e.g. with pip) had some
-glaring issues. Additionally, PyOpenCL removed deprecated APIs we were using.
-I've pinned us to PyOpenCL releases prior to their pybind11 integration so that
-this project remains installable from pip (see
-[inducer/pyopencl#278](https://github.com/inducer/pyopencl/issues/278)).
-
-## New in Version 1.1.0
-This release focused on supporting the `getblocktemplate` call proposed in
-BIP 22 and BIP 23 and implemented by Bitcoin Core and btcd. This finally allows
-mining without a pool if you supply an address to mine coins to at the command
-line.
-
-HTTP work sources now default to using `getblocktemplate` instead of `getwork`.
-This feature is new and might have bugs that could lead to loss of potential
-mining rewards.
-
+## Maintenance Notes
 It looks like the work sourcing threads run into i/o issues occasionally due to
 using the not-thread-safe Python http lib. I don't aim to address this as most
 of the threaded communication ought to be completely replaced by an event runner
@@ -61,6 +45,7 @@ In an environment with Python 3.5+:
 
 ### Options
 ```
+Options:
   --version             show program's version number and exit
   -h, --help            show this help message and exit
   --verbose             verbose output, suitable for redirection to log file
@@ -82,7 +67,6 @@ In an environment with Python 3.5+:
                         Custom text to include in the coinbase of the
                         generation tx if allowed, encoded as UTF-8.
                         default=ApoCLypse
-
 
   Miner Options:
     -r RATE, --rate=RATE
@@ -109,22 +93,34 @@ In an environment with Python 3.5+:
                         disable using failback hosts provided by server
 
   OpenCL Options:
-    Every option except '-p' and '-v' can be specified as a
+    Every option except 'platform' and 'vectors' can be specified as a
     comma separated list. If there aren't enough entries specified, the
     last available is used. Use --vv to specify per-device vectors usage.
 
     -p PLATFORM, --platform=PLATFORM
                         use platform by id
+    -k KERNEL, --kernel=KERNEL
+                        OpenCL Kernel to use. Defaults to apoclypse-0
     -w WORKSIZE, --worksize=WORKSIZE
-                        work group size, default is maximum returned by OpenCL
+                        work group size, default is maximum reported by the
+                        driver.
     -f FRAMES, --frames=FRAMES
                         will try to bring single kernel execution to 1/frames
                         seconds, default=30, increase this for less desktop
                         lag
-    -s FRAMESLEEP, --sleep=FRAMESLEEP
+    -s FRAME_SLEEP, --sleep=FRAME_SLEEP
                         sleep per frame in seconds, default 0
     --vv=VECTORS        Specifies size of SIMD vectors per selected device.
                         Only size 0 (no vectors) and 2 supported for now.
                         Comma separated for each device. e.g. 0,2,2
     -v, --vectors       Use 2-item vectors for all devices.
 ```
+
+### Examples
+Solo mining against a Bitcoin Core node's RPC port:
+
+    apoclypse --address bc1qf2277gpv3hlewlqq2cuvf77qz5xcjzr7njf3s9 --verbose http://u:p@127.0.0.1:8332
+
+Mining on OpenCL platform 0, device 1 against a stratum server:
+
+    apoclypse -p 0 -d 1 --verbose stratum://u:p@us-east.stratum.hushpool.io:3333

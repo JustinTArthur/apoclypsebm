@@ -44,9 +44,6 @@ parser.add_option('-d', '--device', dest='device', default=[],
                   help='comma separated device IDs, by default will use all (for OpenCL - only GPU devices)')
 parser.add_option('-a', '--address', dest='address',
                   help='Bitcoin address to spend the block reward to if allowed. Required for solo mining, ignored with stratum or getwork sources.')
-parser.add_option('-k', '--kernel', dest='kernel', default='apoclypse-0',
-                  choices=('apoclypse-0', 'apoclypse-loopy',),
-                  help='OpenCL Kernel to use. Defaults to apoclypse-0')
 parser.add_option('--coinbase-msg', dest='coinbase_msg', default='ApoCLypse',
                   help='Custom text to include in the coinbase of the generation tx if allowed, encoded as UTF-8. default=ApoCLypse')
 
@@ -75,8 +72,11 @@ group = OptionGroup(parser,
                     "Use --vv to specify per-device vectors usage."
                     )
 group.add_option('-p', '--platform', dest='platform', default=-1, help='use platform by id', type='int')
+group.add_option('-k', '--kernel', dest='kernel', default='apoclypse-0',
+                  choices=('apoclypse-0', 'apoclypse-loopy',),
+                  help='OpenCL Kernel to use. Defaults to apoclypse-0')
 group.add_option('-w', '--worksize', dest='worksize', default=[],
-                 help='work group size, default is maximum returned by OpenCL')
+                 help='work group size, default is maximum reported by the driver.')
 group.add_option('-f', '--frames', dest='frames', default=[],
                  help='will try to bring single kernel execution to 1/frames seconds, default=30, increase this for'
                       ' less desktop lag')

@@ -149,6 +149,7 @@ class OpenCLMiner(Miner):
         self.frames = 30
 
         self.worksize = self.frame_sleep = self.rate = self.estimated_rate = 0
+        self.execution_local_dims = None
         self.vectors = False
 
         self.adapter_idx = None
@@ -255,7 +256,7 @@ class OpenCLMiner(Miner):
             if temperature < self.cutoff_temp:
                 self.kernel.set_arg(14, uint32_as_bytes(base))
                 cl.enqueue_nd_range_kernel(queue, self.kernel,
-                                           (global_threads,), (self.worksize,))
+                                           (global_threads,), self.execution_local_dims)
 
                 nonces_left -= global_threads
                 threads_run_pace += global_threads
@@ -345,6 +346,20 @@ class OpenCLMiner(Miner):
                     self.update_time_counter = 1
 
     def load_kernel(self):
+        max_worksize = self.device.get_info(cl.device_info.MAX_WORK_GROUP_SIZE)
+        if not self.worksize:
+            self.worksize = max_worksize
+            if self.options.verbose:
+                say_line('Set worksize to %s from device info.', self.worksize)
+        self.defines += f' -D WORK_GROUP_SIZE={self.worksize}'
+        if self.worksize > max_worksize:
+            # Exceeding the max advertised work group size
+            # The overriding size will only be configure
+            # at compile time isntead of at execution.
+            self.execution_local_dims = None
+        else:
+            self.execution_local_dims = (self.worksize,)
+
         self.context = cl.Context([self.device], None, None)
         if self.device.extensions.find('cl_amd_media_ops') != -1:
             self.defines += ' -D BITALIGN'
@@ -377,12 +392,11 @@ class OpenCLMiner(Miner):
 
         self.kernel = self.program.search
 
-        if not self.worksize:
-            self.worksize = self.kernel.get_work_group_info(
-                cl.kernel_work_group_info.WORK_GROUP_SIZE,
-                self.device
+        if self.options.verbose:
+            compiled_worksize = self.kernel.get_work_group_info(
+                cl.kernel_work_group_info.COMPILE_WORK_GROUP_SIZE, self.device
             )
-            say_line('Set worksize to %s from device info.', self.worksize)
+            say_line('Compiled work size: %s', compiled_worksize)
 
     def get_temperature(self):
         temperature = ADLTemperature()

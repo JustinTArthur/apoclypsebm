@@ -45,7 +45,7 @@ if py2exe:
                 'excludes': ("Tkconstants", "Tkinter", "tcl", "curses", "_ssl", "pyexpat", "unicodedata", "bz2"),
             },
         },
-        'package_data': {'apoclypsebm': ('apoclypse0.cl',)},
+        'package_data': {'apoclypsebm': ('apoclypse-0.cl', 'apoclypse-loopy.cl')},
         'zipfile': None
     })
 
